@@ -56,9 +56,27 @@ import prefux.visual.NodeItem;
 import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
+	
 	/* ADDED */
 	private boolean initialized = false;
-	private List<VisualItem> nodeList = new ArrayList<>();
+	private List<Node> nodeList = new ArrayList<>();
+	
+	private class Node {
+		
+		private final VisualItem item;
+		private double impulse			= 0;
+		private double skew				= 0;
+		private double startTemp		= 10;
+		
+		Node(VisualItem item) {
+			this.item = item;
+		}
+		
+		public VisualItem getItem()		{ return item; }
+		public double getImpulse()		{ return impulse; }
+		public double getSkew()			{ return skew; }
+		public double getStartTemp()	{ return startTemp; }
+	}
 	/* ----- */
 
 	private ForceSimulator	       m_fsim;
@@ -263,7 +281,7 @@ public class GraphEmbedderLayout extends Layout {
 	// ------------------------------------------------------------------------
 
 	private void init() {
-		System.out.println("Initiating graph...");
+		System.out.println("Initializing algorithm...");
 		
 		// Place all nodes in random positions
 		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
@@ -272,10 +290,13 @@ public class GraphEmbedderLayout extends Layout {
 			setX(item, referrer, (Math.random() * 500));
 			setY(item, referrer, (Math.random() * 500));
 			
-			// Save all nodes in some data structure for later use
-			nodeList.add(item);
+			System.out.println(item.getSourceTuple());
+			
+			// Save all the nodes in a list for later use
+			nodeList.add(new Node(item));
 		}
-		System.out.println("Nodes added to list: " + nodeList.size());
+		System.out.println("Nodes added to list: " + nodeList.size() + ".");
+		System.out.println("Initialization done.");
 		
 		initialized = true;
 	}
@@ -303,9 +324,9 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		
 		Collections.shuffle(nodeList);
-		for(VisualItem item : nodeList) {
-			setX(item, referrer, (Math.random() * 500));
-			setY(item, referrer, (Math.random() * 500));
+		for(Node node : nodeList) {
+			setX(node.getItem(), referrer, (Math.random() * 500));
+			setY(node.getItem(), referrer, (Math.random() * 500));
 			for(int i = 0; i < 100000; ++i) {
 				System.out.print("");
 			}
