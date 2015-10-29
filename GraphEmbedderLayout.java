@@ -42,7 +42,9 @@ import org.apache.logging.log4j.Logger;
 
 import prefux.action.layout.Layout;
 import prefux.data.Graph;
+import prefux.data.Node;
 import prefux.data.Schema;
+import prefux.data.Tuple;
 import prefux.data.tuple.TupleSet;
 import prefux.data.util.Point2D;
 import prefux.util.PrefuseLib;
@@ -59,24 +61,25 @@ public class GraphEmbedderLayout extends Layout {
 	
 	/* -------------------- ADDED -------------------- */
 	
-	private List<Node> nodeList = new ArrayList<>();
+	private List<Vertex> nodeList = new ArrayList<>();
 	private boolean initialized = false;
+	private int nrRounds;
 	private int maxRounds;
-	private double globalTemp;
+	private double globalTemp = 2048;
 	
 	private final double upperBoundLocalTemp	= 256;
 	private final double desiredMinTemp			= 3;
 	private final double desiredEdgeLength		= 128;
 	private final double gravitationalConstant	= 0.0625; // = 1 / 16
 	
-	private class Node {
+	private class Vertex { // change name?
 		
 		private final VisualItem item;
 		private double impulse = 0;
 		private double skew = 0;
 		private double temp = 10;
 		
-		Node(VisualItem item) {
+		Vertex(VisualItem item) {
 			this.item = item;
 		}
 		
@@ -296,19 +299,20 @@ public class GraphEmbedderLayout extends Layout {
 		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
 		while (iter.hasNext()) {
 			VisualItem item = iter.next();
-			setX(item, referrer, (Math.random() * 500));
-			setY(item, referrer, (Math.random() * 500));
+			setX(item, referrer, (Math.random() * 1280));
+			setY(item, referrer, (Math.random() * 720));
 			
-			System.out.println(item.getSourceTuple());
+			//System.out.println(item.getSourceTuple());
 			
 			// Save all the nodes in a list for later use
-			nodeList.add(new Node(item));
+			nodeList.add(new Vertex(item));
 		}
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
-		System.out.println("Initialization done.");
 		
 		maxRounds = nodeList.size() * 4;
 		initialized = true;
+		
+		System.out.println("Initialization done.");
 	}
 	
 	//private int iterCount = 0;
@@ -333,17 +337,24 @@ public class GraphEmbedderLayout extends Layout {
 			//
 		}
 		
+		//if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
+		if(nrRounds < 1) {
 		
-		
-		Collections.shuffle(nodeList);
-		for(Node node : nodeList) {
-			setX(node.getItem(), referrer, (Math.random() * 500));
-			setY(node.getItem(), referrer, (Math.random() * 500));
-			for(int i = 0; i < 100000; ++i) {
-				System.out.print("");
+			Collections.shuffle(nodeList);
+			for(Vertex v : nodeList) {
+				setX(v.getItem(), referrer, (Math.random() * 1280));
+				setY(v.getItem(), referrer, (Math.random() * 720));
+				/*for(int i = 0; i < 100000; ++i) {
+					System.out.print("");
+				}*/
+				/*double i = calculateImpulse(node);
+				System.out.print(i + ", ");*/
+				
+				
+				System.out.println(((Node)v.getItem()).getDegree());
 			}
-			double i = calculateImpulse(node);
-			System.out.print(i + ", ");
+			
+			++nrRounds;
 		}
 		
 		//updateNodePositions();
@@ -355,19 +366,11 @@ public class GraphEmbedderLayout extends Layout {
 		}
 	}
 	
-	private double calculateImpulse(Node node) {
+	private double calculateImpulse(Vertex v) {
 		return 10;
 	}
 
 	private synchronized void updateNodePositions() {
-		
-		// update positions
-		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
-		while (iter.hasNext()) {
-			VisualItem item = iter.next();
-			setX(item, referrer, (Math.random() * 500));
-			setY(item, referrer, (Math.random() * 500));
-		}
 	}
 
 	/**
