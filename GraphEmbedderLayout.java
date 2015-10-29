@@ -57,27 +57,36 @@ import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
 	
-	/* ADDED */
-	private boolean initialized = false;
+	/* -------------------- ADDED -------------------- */
+	
 	private List<Node> nodeList = new ArrayList<>();
+	private boolean initialized = false;
+	private int maxRounds;
+	private double globalTemp;
+	
+	private final double upperBoundLocalTemp	= 256;
+	private final double desiredMinTemp			= 3;
+	private final double desiredEdgeLength		= 128;
+	private final double gravitationalConstant	= 0.0625; // = 1 / 16
 	
 	private class Node {
 		
 		private final VisualItem item;
-		private double impulse			= 0;
-		private double skew				= 0;
-		private double startTemp		= 10;
+		private double impulse = 0;
+		private double skew = 0;
+		private double temp = 10;
 		
 		Node(VisualItem item) {
 			this.item = item;
 		}
 		
-		public VisualItem getItem()		{ return item; }
-		public double getImpulse()		{ return impulse; }
-		public double getSkew()			{ return skew; }
-		public double getStartTemp()	{ return startTemp; }
+		public VisualItem getItem() { return item; }
+		public double getImpulse() { return impulse; }
+		public double getSkew() { return skew; }
+		public double getTemp() { return temp; }
 	}
-	/* ----- */
+	
+	/* ----------------------------------------------- */
 
 	private ForceSimulator	       m_fsim;
 	private long	               m_lasttime	= -1L;
@@ -298,6 +307,7 @@ public class GraphEmbedderLayout extends Layout {
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		System.out.println("Initialization done.");
 		
+		maxRounds = nodeList.size() * 4;
 		initialized = true;
 	}
 	
@@ -323,6 +333,8 @@ public class GraphEmbedderLayout extends Layout {
 			//
 		}
 		
+		
+		
 		Collections.shuffle(nodeList);
 		for(Node node : nodeList) {
 			setX(node.getItem(), referrer, (Math.random() * 500));
@@ -330,13 +342,21 @@ public class GraphEmbedderLayout extends Layout {
 			for(int i = 0; i < 100000; ++i) {
 				System.out.print("");
 			}
+			double i = calculateImpulse(node);
+			System.out.print(i + ", ");
 		}
 		
 		//updateNodePositions();
 		
+		
+		
 		if (frac == 1.0) {
 			reset();
 		}
+	}
+	
+	private double calculateImpulse(Node node) {
+		return 10;
 	}
 
 	private synchronized void updateNodePositions() {
@@ -502,4 +522,4 @@ public class GraphEmbedderLayout extends Layout {
 		FORCEITEM_SCHEMA.addColumn(FORCEITEM, ForceItem.class, new ForceItem());
 	}
 
-} // end of class ForceDirectedLayout
+} // end of class GraphEmbedderLayout
