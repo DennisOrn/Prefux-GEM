@@ -72,7 +72,7 @@ public class GraphEmbedderLayout extends Layout {
 	private final double desiredEdgeLength		= 128;
 	private final double gravitationalConstant	= 0.0625; // = 1 / 16
 	
-	private class Vertex { // change name?
+	private class Vertex {
 		
 		private final VisualItem item;
 		private double impulse = 0;
@@ -347,102 +347,58 @@ public class GraphEmbedderLayout extends Layout {
 				/*for(int i = 0; i < 100000; ++i) {
 					System.out.print("");
 				}*/
-				/*double i = calculateImpulse(node);
-				System.out.print(i + ", ");*/
 				
 				
-				System.out.println(((Node)v.getItem()).getDegree());
+				calculateImpulse(v);
 			}
-			
+			double[] baryCenter = calculateBarycenter();
+			System.out.println(baryCenter[0] + "," + baryCenter[1]);
 			++nrRounds;
-		}
-		
-		//updateNodePositions();
-		
-		
-		
-		if (frac == 1.0) {
-			reset();
 		}
 	}
 	
-	private double calculateImpulse(Vertex v) {
-		return 10;
+	private double calculateScalingFactor(Vertex v) {
+		double deg = ((Node)v.getItem()).getDegree();
+		return 1 + deg / 2;
 	}
-
-	private synchronized void updateNodePositions() {
-	}
-
-	/**
-	 * Reset the force simulation state for all nodes processed by this layout.
-	 */
-	public void reset() {
-		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
-		while (iter.hasNext()) {
-			VisualItem item = iter.next();
-			ForceItem fitem = (ForceItem) item.get(FORCEITEM);
-			if (fitem != null) {
-				fitem.location[0] = item.getEndX();
-				fitem.location[1] = item.getEndY();
-				fitem.force[0] = fitem.force[1] = 0;
-				fitem.velocity[0] = fitem.velocity[1] = 0;
-			}
+	
+	private double[] calculateBarycenter() {
+		double[] center = new double[2];
+		center[0] = 0;
+		center[1] = 0;
+		for(Vertex v : nodeList) {
+			center[0] += v.getItem().getX();
+			center[1] += v.getItem().getY();
 		}
-		m_lasttime = -1L;
+		center[0] = center[0] / nodeList.size();
+		center[1] = center[1] / nodeList.size();
+		return center;
 	}
-
-	/**
-	 * Loads the simulator with all relevant force items and springs.
-	 * 
-	 * @param fsim
-	 *            the force simulator driving this layout
-	 */
-	protected synchronized void initSimulator(ForceSimulator fsim) {
-		// runs every iteration
+	
+	private double[] calculateImpulse(Vertex v) {
 		
-		// make sure we have force items to work with
-		TupleSet ts = m_vis.getGroup(m_nodeGroup);
-		if (ts == null)
-			return;
-		try {
-			ts.addColumns(FORCEITEM_SCHEMA);
-		} catch (IllegalArgumentException iae) { /* ignored */ }
-
-		double startX = (referrer == null ? 0f : referrer.getX());
-		double startY = (referrer == null ? 0f : referrer.getY());
-		startX = Double.isNaN(startX) ? 0f : startX;
-		startY = Double.isNaN(startY) ? 0f : startY;
-
-		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
-		while (iter.hasNext()) {
-			VisualItem item = (VisualItem) iter.next();
-			ForceItem fitem = (ForceItem) item.get(FORCEITEM);
-			fitem.mass = getMassValue(item);
-			double x = item.getEndX();
-			double y = item.getEndY();
-			fitem.location[0] = (Double.isNaN(x) ? startX : x);
-			fitem.location[1] = (Double.isNaN(y) ? startY : y);
-			fsim.addItem(fitem);
-			
-			/*VisualItem item = (VisualItem) iter.next();
-			item.setX((double)(Math.random() * 500));
-			item.setY((double)(Math.random() * 500));*/
-					
-		}
-		if (m_edgeGroup != null) {
-			iter = m_vis.visibleItems(m_edgeGroup);
-			while (iter.hasNext()) {
-				EdgeItem e = (EdgeItem) iter.next();
-				NodeItem n1 = e.getSourceItem();
-				ForceItem f1 = (ForceItem) n1.get(FORCEITEM);
-				NodeItem n2 = e.getTargetItem();
-				ForceItem f2 = (ForceItem) n2.get(FORCEITEM);
-				double coeff = getSpringCoefficient(e);
-				double slen = getSpringLength(e);
-				fsim.addSpring(f1, f2, (coeff >= 0 ? coeff : -1.),
-				        (slen >= 0 ? slen : -1.));
-			}
-		}
+		// Attraction to center of gravity
+		
+		double[] impulse = new double[2];
+		impulse = calculateBarycenter();
+		
+		impulse[0] = impulse[0] - v.getItem().getX();
+		impulse[1] = impulse[1] - v.getItem().getY();
+		
+		double scalingFactor = calculateScalingFactor(v);
+		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
+		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
+		
+		// Random disturbance vector; default range: [-32,32] * [-32,32]
+		
+		impulse[0] += Math.random() * 40 - 20;
+		impulse[1] += Math.random() * 40 - 20;
+		
+		
+		
+		
+		
+		return new double[2];
 	}
 
 	/**
