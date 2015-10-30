@@ -41,6 +41,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import prefux.action.layout.Layout;
+import prefux.data.Edge;
 import prefux.data.Graph;
 import prefux.data.Node;
 import prefux.data.Schema;
@@ -338,18 +339,26 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		
 		//if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
-		if(nrRounds < 1) {
+		if(nrRounds < 10) {
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
 				setX(v.getItem(), referrer, (Math.random() * 1280));
 				setY(v.getItem(), referrer, (Math.random() * 720));
-				/*for(int i = 0; i < 100000; ++i) {
+				for(int i = 0; i < 100000; ++i) {
 					System.out.print("");
-				}*/
+				}
 				
 				
-				calculateImpulse(v);
+				double[] im = calculateImpulse(v);
+				//System.out.println(im[0] + "," + im[1]);
+				
+				im[0] = im[0] / 5000;
+				im[1] = im[1] / 5000;
+				
+				
+				setX(v.getItem(), referrer, im[0]);
+				setY(v.getItem(), referrer, im[1]);
 			}
 			double[] baryCenter = calculateBarycenter();
 			System.out.println(baryCenter[0] + "," + baryCenter[1]);
@@ -398,7 +407,85 @@ public class GraphEmbedderLayout extends Layout {
 		
 		
 		
-		return new double[2];
+		/**************************************************/
+		// For every node connected to v: calculate repulsive forces
+		
+		/*Iterator<? extends Edge> iter = ((Node)v.getItem()).edges(); // or maybe every node in the graph?
+		while(iter.hasNext()) {
+			Edge e = iter.next();
+			VisualItem u = (VisualItem)e.getSourceNode();
+			
+			// Make sure u and v are not the same node
+			
+			if(u == v.getItem()) {
+				u = (VisualItem)e.getTargetNode();
+			}
+			
+			// Calculate repulsive forces
+			
+			double[] delta = new double[2];
+			delta[0] = v.getItem().getX() - u.getX();
+			delta[1] = v.getItem().getY() - u.getY();
+			
+			impulse[0] = impulse[0] + delta[0] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
+			impulse[1] = impulse[1] + delta[1] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
+		}*/
+		/**************************************************/
+		
+		// For every node: calculate repulsive forces
+		
+		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
+		while (iter.hasNext()) {
+			VisualItem u = iter.next();
+			
+			if(u != v.getItem()) {
+				double[] delta = new double[2];
+				delta[0] = v.getItem().getX() - u.getX();
+				delta[1] = v.getItem().getY() - u.getY();
+				
+				impulse[0] = impulse[0] + delta[0]
+						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
+				impulse[1] = impulse[1] + delta[1]
+						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
+			}
+		}
+		
+		/*
+		 * Try this^ but with nodeList instead, faster?
+		 */
+		
+		
+		
+		
+		
+		
+		
+		// For every node connected to v: calculate attractive forces
+		
+		Iterator<? extends Edge> it = ((Node)v.getItem()).edges();
+		while(it.hasNext()) {
+			Edge e = it.next();
+			VisualItem u = (VisualItem)e.getSourceNode();
+			
+			// Make sure u and v are not the same node
+			
+			if(u == v.getItem()) {
+				u = (VisualItem)e.getTargetNode();
+			}
+			
+			// Calculate attractive forces
+			
+			double[] delta = new double[2];
+			delta[0] = v.getItem().getX() - u.getX();
+			delta[1] = v.getItem().getY() - u.getY();
+			
+			impulse[0] = impulse[0] - delta[0] * Math.pow(delta[0], 2)
+					/ (Math.pow(desiredEdgeLength, 2) * scalingFactor);
+			impulse[1] = impulse[1] - delta[1] * Math.pow(delta[1], 2)
+					/ (Math.pow(desiredEdgeLength, 2) * scalingFactor);
+		}
+		
+		return impulse;
 	}
 
 	/**
