@@ -350,7 +350,7 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		
 		//if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
-		if(nrRounds < 1000) {
+		if(nrRounds < maxRounds) {
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
@@ -372,8 +372,21 @@ public class GraphEmbedderLayout extends Layout {
 				
 				v = calculateTemperature(v, im);
 			}
-			double[] baryCenter = calculateBarycenter();
-			System.out.println(baryCenter[0] + " : " + baryCenter[1]);
+			/*double[] baryCenter = calculateBarycenter();
+			System.out.println(baryCenter[0] + " : " + baryCenter[1]);*/
+			
+			
+			// Update the global temperature
+			// This is horrible, change this to something better PLEASE
+			// O(n) are you kidding me
+			double temp = 0;
+			for(Vertex v : nodeList) {
+				temp += v.getTemp();
+			}
+			globalTemp = temp / nodeList.size();
+			System.out.println("Global temperature: " + globalTemp);
+			
+			
 			++nrRounds;
 		}
 	}
