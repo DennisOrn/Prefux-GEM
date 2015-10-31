@@ -71,16 +71,27 @@ public class GraphEmbedderLayout extends Layout {
 	private class Vertex {
 		
 		private final VisualItem item;
-		private double impulse = 0;
+		private double[] impulse = new double[2];
 		private double skew = 0;
 		private double temp = 10;
 		
 		Vertex(VisualItem item) {
 			this.item = item;
+			impulse[0] = 0;
+			impulse[1] = 0;
 		}
 		
 		public VisualItem getItem() { return item; }
-		public double getImpulse() { return impulse; }
+		
+		public void setImpulse(double[] impulse) {
+			this.impulse[0] = impulse[0];
+			this.impulse[1] = impulse[1];
+		}
+		
+		public void setSkew(double skew) { this.skew = skew; }
+		public void setTemp(double temp) { this.temp = temp; }
+		
+		public double[] getImpulse() { return impulse; }
 		public double getSkew() { return skew; }
 		public double getTemp() { return temp; }
 	}
@@ -298,6 +309,9 @@ public class GraphEmbedderLayout extends Layout {
 			
 			double newX = (Math.random() * 1280);
 			double newY = (Math.random() * 720);
+			//double newX = 1;
+			//double newY = 1;
+			
 			setX(item, referrer, (Math.random() * newX));
 			setY(item, referrer, (Math.random() * newY));
 			
@@ -336,15 +350,15 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		
 		//if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
-		if(nrRounds < 10) {
+		if(nrRounds < 1000) {
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
-				setX(v.getItem(), referrer, (Math.random() * 1280));
-				setY(v.getItem(), referrer, (Math.random() * 720));
-				for(int i = 0; i < 100000; ++i) {
+				/*setX(v.getItem(), referrer, (Math.random() * 1280));
+				setY(v.getItem(), referrer, (Math.random() * 720));*/
+				/*for(int i = 0; i < 100000; ++i) {
 					System.out.print("");
-				}
+				}*/
 				
 				// beware of double overflow somewhere, possibly?
 				
@@ -359,7 +373,7 @@ public class GraphEmbedderLayout extends Layout {
 				v = calculateTemperature(v, im);
 			}
 			double[] baryCenter = calculateBarycenter();
-			System.out.println(baryCenter[0] + "," + baryCenter[1]);
+			System.out.println(baryCenter[0] + " : " + baryCenter[1]);
 			++nrRounds;
 		}
 	}
@@ -486,8 +500,22 @@ public class GraphEmbedderLayout extends Layout {
 			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
 			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
 			
-			v.getItem().setX(v.getItem().getX() + impulse[0]);
-			v.getItem().setY(v.getItem().getY() + impulse[1]);
+			double oldX = v.getItem().getX();
+			double oldY = v.getItem().getY();
+			
+			v.getItem().setX(oldX + impulse[0]);
+			v.getItem().setY(oldY + impulse[1]);
+			
+			// Update the sum of all node-coordinates
+			sumPos[0] += impulse[0];
+			sumPos[1] += impulse[1];
+			
+			// do this later? ->
+			v.setImpulse(impulse);
+		}
+		
+		if(impulse[0] != 0 || impulse[1] != 0) {
+			
 		}
 		
 		return v;
