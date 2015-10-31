@@ -35,8 +35,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javafx.geometry.Rectangle2D;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,9 +43,6 @@ import prefux.data.Edge;
 import prefux.data.Graph;
 import prefux.data.Node;
 import prefux.data.Schema;
-import prefux.data.Tuple;
-import prefux.data.tuple.TupleSet;
-import prefux.data.util.Point2D;
 import prefux.util.PrefuseLib;
 import prefux.util.force.DragForce;
 import prefux.util.force.ForceItem;
@@ -55,7 +50,6 @@ import prefux.util.force.ForceSimulator;
 import prefux.util.force.NBodyForce;
 import prefux.util.force.SpringForce;
 import prefux.visual.EdgeItem;
-import prefux.visual.NodeItem;
 import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
@@ -67,8 +61,9 @@ public class GraphEmbedderLayout extends Layout {
 	private int nrRounds;
 	private int maxRounds;
 	private double globalTemp = 2048;
+	private double[] sumPos = new double[2];
 	
-	private final double upperBoundLocalTemp	= 256;
+	private final double maxTemp				= 256;
 	private final double desiredMinTemp			= 3;
 	private final double desiredEdgeLength		= 128;
 	private final double gravitationalConstant	= 0.0625; // = 1 / 16
@@ -300,12 +295,17 @@ public class GraphEmbedderLayout extends Layout {
 		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
 		while (iter.hasNext()) {
 			VisualItem item = iter.next();
-			setX(item, referrer, (Math.random() * 1280));
-			setY(item, referrer, (Math.random() * 720));
+			
+			double newX = (Math.random() * 1280);
+			double newY = (Math.random() * 720);
+			setX(item, referrer, (Math.random() * newX));
+			setY(item, referrer, (Math.random() * newY));
 			
 			//System.out.println(item.getSourceTuple());
 			
-			// Save all the nodes in a list for later use
+			sumPos[0] += newX;
+			sumPos[1] += newY;
+			
 			nodeList.add(new Vertex(item));
 		}
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
@@ -316,13 +316,10 @@ public class GraphEmbedderLayout extends Layout {
 		System.out.println("Initialization done.");
 	}
 	
-	//private int iterCount = 0;
 	/**
 	 * @see prefux.action.Action#run(double)
 	 */
 	public void run(double frac) {
-		
-		//System.out.println(++iterCount);
 		
 		if(!initialized) {
 			init();
@@ -349,16 +346,17 @@ public class GraphEmbedderLayout extends Layout {
 					System.out.print("");
 				}
 				
+				// beware of double overflow somewhere, possibly?
 				
 				double[] im = calculateImpulse(v);
-				//System.out.println(im[0] + "," + im[1]);
 				
-				im[0] = im[0] / 5000;
+				/*im[0] = im[0] / 5000;
 				im[1] = im[1] / 5000;
 				
-				
 				setX(v.getItem(), referrer, im[0]);
-				setY(v.getItem(), referrer, im[1]);
+				setY(v.getItem(), referrer, im[1]);*/
+				
+				v = calculateTemperature(v, im);
 			}
 			double[] baryCenter = calculateBarycenter();
 			System.out.println(baryCenter[0] + "," + baryCenter[1]);
@@ -373,14 +371,8 @@ public class GraphEmbedderLayout extends Layout {
 	
 	private double[] calculateBarycenter() {
 		double[] center = new double[2];
-		center[0] = 0;
-		center[1] = 0;
-		for(Vertex v : nodeList) {
-			center[0] += v.getItem().getX();
-			center[1] += v.getItem().getY();
-		}
-		center[0] = center[0] / nodeList.size();
-		center[1] = center[1] / nodeList.size();
+		center[0] = sumPos[0] / nodeList.size();
+		center[1] = sumPos[1] / nodeList.size();
 		return center;
 	}
 	
@@ -487,6 +479,22 @@ public class GraphEmbedderLayout extends Layout {
 		
 		return impulse;
 	}
+	
+	public Vertex calculateTemperature(Vertex v, double[] impulse) {
+		
+		if(impulse[0] != 0 || impulse[1] != 0) {
+			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
+			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
+			
+			v.getItem().setX(v.getItem().getX() + impulse[0]);
+			v.getItem().setY(v.getItem().getY() + impulse[1]);
+		}
+		
+		return v;
+	}
+	
+	
+	
 
 	/**
 	 * Get the mass value associated with the given node. Subclasses should
