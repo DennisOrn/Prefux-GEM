@@ -63,10 +63,15 @@ public class GraphEmbedderLayout extends Layout {
 	private double globalTemp = 2048;
 	private double[] sumPos = new double[2];
 	
-	private final double maxTemp				= 256;
-	private final double desiredMinTemp			= 3;
-	private final double desiredEdgeLength		= 128;
-	private final double gravitationalConstant	= 0.0625; // = 1 / 16
+	private final double maxTemp					= 256;
+	private final double desiredMinTemp				= 3;
+	private final double desiredEdgeLength			= 128;
+	private final double gravitationalConstant		= 0.0625;	// 1/16
+	
+	private final double rotationOpeningAngle		= 180;		// rad
+	private final double rotationSensitivity		= 60;		// rad/3
+	private final double oscillationOpeningAngle	= 0.3333;	// 1/3
+	private double oscillationSensitivity;						// 1/(2|V|) OR (1/2)|V| ???
 	
 	private class Vertex {
 		
@@ -100,6 +105,7 @@ public class GraphEmbedderLayout extends Layout {
 
 	private ForceSimulator	       m_fsim;
 	private boolean	               m_runonce;
+
 	private boolean	               m_enforceBounds;
 
 	protected transient VisualItem	referrer;
@@ -227,6 +233,8 @@ public class GraphEmbedderLayout extends Layout {
 	// ------------------------------------------------------------------------
 
 	private void init() {
+		
+		System.out.println("-------------------------------------");
 		System.out.println("Initializing algorithm...");
 		
 		// Place all nodes in random positions
@@ -236,8 +244,8 @@ public class GraphEmbedderLayout extends Layout {
 			
 			double newX = (Math.random() * 1280);
 			double newY = (Math.random() * 720);
-			//double newX = 1;
-			//double newY = 1;
+			//newX = 1;
+			//newY = 1;
 			
 			setX(item, referrer, (Math.random() * newX));
 			setY(item, referrer, (Math.random() * newY));
@@ -252,9 +260,15 @@ public class GraphEmbedderLayout extends Layout {
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		
 		maxRounds = nodeList.size() * 4;
+		System.out.println("maxRounds set to: " + maxRounds + ".");
+		
+		oscillationSensitivity = (double)((double)((double)1 / (double)2)) * (double)nodeList.size(); // time to take a break
+		System.out.println("oscillationSensitivity set to: " + oscillationSensitivity + ".");
+		
 		initialized = true;
 		
 		System.out.println("Initialization done.");
+		System.out.println("-------------------------------------");
 	}
 	
 	/**
@@ -426,6 +440,7 @@ public class GraphEmbedderLayout extends Layout {
 	
 	public Vertex calculateTemperature(Vertex v, double[] impulse) {
 		
+		// If the current impulse is not 0 
 		if(impulse[0] != 0 || impulse[1] != 0) {
 			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
 			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
@@ -444,15 +459,51 @@ public class GraphEmbedderLayout extends Layout {
 			v.setImpulse(impulse);
 		}
 		
-		if(impulse[0] != 0 || impulse[1] != 0) {
+		double[] oldImpulse = new double[2];
+		oldImpulse[0] = v.getImpulse()[0];
+		oldImpulse[1] = v.getImpulse()[1];
+		
+		// If the last impulse was not zero		
+		if(oldImpulse[0] != 0 || oldImpulse[1] != 0) {
+			
+			// Calculate the angle between the last impulse and the current impulse
+			double uLen = Math.sqrt(Math.pow(impulse[0], 2) + Math.pow(impulse[1], 2));
+			double vLen = Math.sqrt(Math.pow(oldImpulse[0], 2) + Math.pow(oldImpulse[1], 2));
+			double dot = impulse[0] * oldImpulse[0] + impulse[1] * oldImpulse[1];
+			double cosAngle = dot / (uLen * vLen);
+			double angle = Math.toDegrees(Math.acos(cosAngle));
+			
+			// Check for rotation
+			if(Math.sin(angle) >= Math.sin(90 + rotationOpeningAngle / 2)) {
+				v.setSkew(v.getSkew() + rotationSensitivity * Math.signum(Math.sin(angle)));
+			}
+			
+			// Check for oscillation
+			if(Math.abs(Math.cos(angle)) >= Math.cos(oscillationOpeningAngle / 2)) {
+				v.setTemp(v.getTemp() * oscillationSensitivity * Math.cos(angle));
+			}
+			
+			v.setTemp(v.getTemp() * (1 - Math.abs(v.getSkew())));
+			v.setTemp(Math.min(v.getTemp(), maxTemp));
+			v.setImpulse(impulse);
+			
+			
+			//	CHECK IF ROTATION
+			//	IF sin(angle) >= sin((rad / 2) + (rotationOpeningAngle / 2)) THEN:
+			//		v.skew = v.skew + rotationSensitivity * sgn(sin(angle))
+			
+			//	CHECK IF OSCILLATION
+			//	IF |cos(angle)| >= cos(oscillationOpeningAngle / 2) THEN:
+			//		v.temp = v.temp * oscillationSensitivity * cos(angle)
+			
+			//	v.temp = v.temp * (1 - |v.skew|)
+			//	v.temp = min(v.temp, maxTemp)
+			//	v.impulse = impulse
 			
 		}
 		
 		return v;
 	}
-	
-	
-	
 
 	/**
 	 * Get the mass value associated with the given node. Subclasses should
