@@ -99,10 +99,7 @@ public class GraphEmbedderLayout extends Layout {
 	/* ----------------------------------------------- */
 
 	private ForceSimulator	       m_fsim;
-	private long	               m_lasttime	= -1L;
-	private long	               m_maxstep	= 50L;
 	private boolean	               m_runonce;
-	private int	                   m_iterations	= 100;
 	private boolean	               m_enforceBounds;
 
 	protected transient VisualItem	referrer;
@@ -214,76 +211,6 @@ public class GraphEmbedderLayout extends Layout {
 	// ------------------------------------------------------------------------
 
 	/**
-	 * Get the maximum timestep allowed for integrating node settings between
-	 * runs of this layout. When computation times are longer than desired, and
-	 * node positions are changing dramatically between animated frames, the max
-	 * step time can be lowered to suppress node movement.
-	 * 
-	 * @return the maximum timestep allowed for integrating between two layout
-	 *         steps.
-	 */
-	public long getMaxTimeStep() {
-		return m_maxstep;
-	}
-
-	/**
-	 * Set the maximum timestep allowed for integrating node settings between
-	 * runs of this layout. When computation times are longer than desired, and
-	 * node positions are changing dramatically between animated frames, the max
-	 * step time can be lowered to suppress node movement.
-	 * 
-	 * @param maxstep
-	 *            the maximum timestep allowed for integrating between two
-	 *            layout steps
-	 */
-	public void setMaxTimeStep(long maxstep) {
-		this.m_maxstep = maxstep;
-	}
-
-	/**
-	 * Get the force simulator driving this layout.
-	 * 
-	 * @return the force simulator
-	 */
-	public ForceSimulator getForceSimulator() {
-		return m_fsim;
-	}
-
-	/**
-	 * Set the force simulator driving this layout.
-	 * 
-	 * @param fsim
-	 *            the force simulator
-	 */
-	public void setForceSimulator(ForceSimulator fsim) {
-		m_fsim = fsim;
-	}
-
-	/**
-	 * Get the number of iterations to use when computing a layout in run-once
-	 * mode.
-	 * 
-	 * @return the number of layout iterations to run
-	 */
-	public int getIterations() {
-		return m_iterations;
-	}
-
-	/**
-	 * Set the number of iterations to use when computing a layout in run-once
-	 * mode.
-	 * 
-	 * @param iter
-	 *            the number of layout iterations to run
-	 */
-	public void setIterations(int iter) {
-		if (iter < 1)
-			throw new IllegalArgumentException(
-			        "Iterations must be a positive number!");
-		m_iterations = iter;
-	}
-
-	/**
 	 * Explicitly sets the node and edge groups to use for this layout,
 	 * overriding the group setting passed to the constructor.
 	 * 
@@ -349,8 +276,7 @@ public class GraphEmbedderLayout extends Layout {
 			//
 		}
 		
-		//if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
-		if(nrRounds < maxRounds) {
+		if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
@@ -362,19 +288,10 @@ public class GraphEmbedderLayout extends Layout {
 				
 				// beware of double overflow somewhere, possibly?
 				
-				double[] im = calculateImpulse(v);
+				double[] imp = calculateImpulse(v);
 				
-				/*im[0] = im[0] / 5000;
-				im[1] = im[1] / 5000;
-				
-				setX(v.getItem(), referrer, im[0]);
-				setY(v.getItem(), referrer, im[1]);*/
-				
-				v = calculateTemperature(v, im);
+				v = calculateTemperature(v, imp);
 			}
-			/*double[] baryCenter = calculateBarycenter();
-			System.out.println(baryCenter[0] + " : " + baryCenter[1]);*/
-			
 			
 			// Update the global temperature
 			// This is horrible, change this to something better PLEASE
