@@ -58,13 +58,13 @@ public class GraphEmbedderLayout extends Layout {
 	
 	private List<Vertex> nodeList = new ArrayList<>();
 	private boolean initialized = false;
-	private int nrRounds;
+	private int nrRounds = 0;
 	private int maxRounds;
 	private double globalTemp = 2048;
 	private double[] sumPos = new double[2];
 	
 	private final double maxTemp					= 256;
-	private final double desiredMinTemp				= 3;
+	private final double desiredTemp				= 3;
 	private final double desiredEdgeLength			= 128;
 	private final double gravitationalConstant		= 0.0625;	// 1/16
 	
@@ -262,7 +262,7 @@ public class GraphEmbedderLayout extends Layout {
 		maxRounds = nodeList.size() * 4;
 		System.out.println("maxRounds set to: " + maxRounds + ".");
 		
-		oscillationSensitivity = (double)((double)((double)1 / (double)2)) * (double)nodeList.size(); // time to take a break
+		oscillationSensitivity = 0.5 * nodeList.size();
 		System.out.println("oscillationSensitivity set to: " + oscillationSensitivity + ".");
 		
 		initialized = true;
@@ -280,22 +280,13 @@ public class GraphEmbedderLayout extends Layout {
 			init();
 		}
 		
-		// perform different actions if this is a run-once or
-		// run-continuously layout
-		
-		// m_runonce is typically FALSE
-		if (m_runonce) {
-			//
-		} else {
-			//
-		}
-		
-		if(globalTemp > desiredMinTemp && nrRounds < maxRounds) {
+		//if(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		if(nrRounds < 200) {
+			
+			System.out.println("ROUND " + (nrRounds + 1));
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
-				/*setX(v.getItem(), referrer, (Math.random() * 1280));
-				setY(v.getItem(), referrer, (Math.random() * 720));*/
 				/*for(int i = 0; i < 100000; ++i) {
 					System.out.print("");
 				}*/
@@ -304,7 +295,7 @@ public class GraphEmbedderLayout extends Layout {
 				
 				double[] imp = calculateImpulse(v);
 				
-				v = calculateTemperature(v, imp);
+				calculateTemperature(v, imp);
 			}
 			
 			// Update the global temperature
@@ -316,7 +307,7 @@ public class GraphEmbedderLayout extends Layout {
 			}
 			globalTemp = temp / nodeList.size();
 			System.out.println("Global temperature: " + globalTemp);
-			
+			System.out.println("-------------------------------------");
 			
 			++nrRounds;
 		}
@@ -438,10 +429,12 @@ public class GraphEmbedderLayout extends Layout {
 		return impulse;
 	}
 	
-	public Vertex calculateTemperature(Vertex v, double[] impulse) {
+	public void calculateTemperature(Vertex v, double[] impulse) {
 		
 		// If the current impulse is not 0 
 		if(impulse[0] != 0 || impulse[1] != 0) {
+			
+			// Scale the impulse with the current temperature
 			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
 			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
 			
@@ -456,14 +449,14 @@ public class GraphEmbedderLayout extends Layout {
 			sumPos[1] += impulse[1];
 			
 			// do this later? ->
-			v.setImpulse(impulse);
+			//v.setImpulse(impulse);
 		}
 		
 		double[] oldImpulse = new double[2];
 		oldImpulse[0] = v.getImpulse()[0];
 		oldImpulse[1] = v.getImpulse()[1];
 		
-		// If the last impulse was not zero		
+		// If the last impulse was not 0		
 		if(oldImpulse[0] != 0 || oldImpulse[1] != 0) {
 			
 			// Calculate the angle between the last impulse and the current impulse
@@ -486,23 +479,10 @@ public class GraphEmbedderLayout extends Layout {
 			v.setTemp(v.getTemp() * (1 - Math.abs(v.getSkew())));
 			v.setTemp(Math.min(v.getTemp(), maxTemp));
 			v.setImpulse(impulse);
-			
-			
-			//	CHECK IF ROTATION
-			//	IF sin(angle) >= sin((rad / 2) + (rotationOpeningAngle / 2)) THEN:
-			//		v.skew = v.skew + rotationSensitivity * sgn(sin(angle))
-			
-			//	CHECK IF OSCILLATION
-			//	IF |cos(angle)| >= cos(oscillationOpeningAngle / 2) THEN:
-			//		v.temp = v.temp * oscillationSensitivity * cos(angle)
-			
-			//	v.temp = v.temp * (1 - |v.skew|)
-			//	v.temp = min(v.temp, maxTemp)
-			//	v.impulse = impulse
-			
 		}
 		
-		return v;
+		System.out.println("Local impulse: [" + v.getImpulse()[0] + "," + v.getImpulse()[1] + "]");
+		System.out.println("Local temperature: " + v.getTemp());
 	}
 
 	/**
