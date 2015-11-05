@@ -70,7 +70,7 @@ public class GraphEmbedderLayout extends Layout {
 	
 	private final double oscillationOpeningAngle	= Math.PI / 4;
 	private final double rotationOpeningAngle		= Math.PI / 3;
-	private final double oscillationSensitivity		= 1;
+	private final double oscillationSensitivity		= 1.1;
 	private double rotationSensitivity;
 	
 	private class Vertex {
@@ -283,7 +283,7 @@ public class GraphEmbedderLayout extends Layout {
 		if(globalTemp > desiredTemp && nrRounds < maxRounds) {
 		//if(nrRounds < 200) {
 			
-			//System.out.println("ROUND " + (nrRounds + 1));
+			System.out.println("ROUND " + (nrRounds + 1));
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
@@ -468,22 +468,21 @@ public class GraphEmbedderLayout extends Layout {
 				v.setSkew(v.getSkew() + rotationSensitivity * Math.signum(Math.sin(angle)));
 			}
 			
-			// Check for oscillation
-			/*if(Math.abs(Math.cos(angle)) >= Math.cos(oscillationOpeningAngle / 2)) {
-				v.setTemp(v.getTemp() * oscillationSensitivity * Math.cos(angle));
-			}*/
+			// Check for oscillation OR move in the right direction
+			if(Math.abs(Math.cos(angle)) >= Math.cos(oscillationOpeningAngle / 2)) {
+				if(Math.cos(angle) > 0) { // move in the right direction
+					v.setTemp(v.getTemp() * oscillationSensitivity);
+				} else { // oscillation
+					v.setTemp(v.getTemp() / oscillationSensitivity);
+				}
+			}
 			
 			v.setTemp(v.getTemp() * (1 - Math.abs(v.getSkew())));
 			v.setTemp(Math.min(v.getTemp(), maxTemp));
 			v.setImpulse(impulse);
-			//System.out.println(v.getSkew());
-			
-			//System.out.println(v.getTemp());
 		} else {
 			v.setImpulse(impulse);
 		}
-		//System.out.println("Local impulse: [" + v.getImpulse()[0] + "," + v.getImpulse()[1] + "]");
-		//System.out.println("Local temperature: " + v.getTemp());
 	}
 
 	/**
