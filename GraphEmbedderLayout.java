@@ -281,33 +281,21 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		
 		if(globalTemp > desiredTemp && nrRounds < maxRounds) {
-		//if(nrRounds < 200) {
 			
 			System.out.println("ROUND " + (nrRounds + 1));
+			
+			// reset the global temperature
+			globalTemp = 0;
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
-				/*for(int i = 0; i < 100000; ++i) {
-					System.out.print("");
-				}*/
-				
-				// beware of double overflow somewhere, possibly?
 				
 				double[] imp = calculateImpulse(v);
-				
 				calculateTemperature(v, imp);
 			}
 			
-			// Update the global temperature
-			// This is horrible, change this to something better PLEASE
-			// O(n) are you kidding me
-			double temp = 0;
-			for(Vertex v : nodeList) {
-				temp += v.getTemp();
-			}
-			globalTemp = temp / nodeList.size();
+			globalTemp = globalTemp / nodeList.size();
 			System.out.println("Global temperature: " + globalTemp);
-			//System.out.println("-------------------------------------");
 			
 			++nrRounds;
 		}
@@ -344,45 +332,13 @@ public class GraphEmbedderLayout extends Layout {
 		impulse[0] += Math.random() * 40 - 20;
 		impulse[1] += Math.random() * 40 - 20;
 		
+		// For every node in the graph: calculate repulsive forces
 		
-		
-		
-		
-		/**************************************************/
-		// For every node connected to v: calculate repulsive forces
-		
-		/*Iterator<? extends Edge> iter = ((Node)v.getItem()).edges(); // or maybe every node in the graph?
-		while(iter.hasNext()) {
-			Edge e = iter.next();
-			VisualItem u = (VisualItem)e.getSourceNode();
-			
-			// Make sure u and v are not the same node
-			
-			if(u == v.getItem()) {
-				u = (VisualItem)e.getTargetNode();
-			}
-			
-			// Calculate repulsive forces
-			
-			double[] delta = new double[2];
-			delta[0] = v.getItem().getX() - u.getX();
-			delta[1] = v.getItem().getY() - u.getY();
-			
-			impulse[0] = impulse[0] + delta[0] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
-			impulse[1] = impulse[1] + delta[1] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
-		}*/
-		/**************************************************/
-		
-		// For every node: calculate repulsive forces
-		
-		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
-		while (iter.hasNext()) {
-			VisualItem u = iter.next();
-			
-			if(u != v.getItem()) {
+		for(Vertex u : nodeList) {
+			if(u.getItem() != v.getItem()) {
 				double[] delta = new double[2];
-				delta[0] = v.getItem().getX() - u.getX();
-				delta[1] = v.getItem().getY() - u.getY();
+				delta[0] = v.getItem().getX() - u.getItem().getX();
+				delta[1] = v.getItem().getY() - u.getItem().getY();
 				
 				impulse[0] = impulse[0] + delta[0]
 						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
@@ -390,16 +346,6 @@ public class GraphEmbedderLayout extends Layout {
 						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
 			}
 		}
-		
-		/*
-		 * Try this^ but with nodeList instead, faster?
-		 */
-		
-		
-		
-		
-		
-		
 		
 		// For every node connected to v: calculate attractive forces
 		
@@ -483,6 +429,8 @@ public class GraphEmbedderLayout extends Layout {
 		} else {
 			v.setImpulse(impulse);
 		}
+		
+		globalTemp += v.getTemp();
 	}
 
 	/**
