@@ -38,17 +38,22 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import prefux.Display;
+import prefux.FxDisplay;
 import prefux.action.layout.Layout;
 import prefux.data.Edge;
 import prefux.data.Graph;
 import prefux.data.Node;
 import prefux.data.Schema;
+import prefux.data.util.Point2D;
+import prefux.data.util.Rectangle2D;
 import prefux.util.PrefuseLib;
 import prefux.util.force.DragForce;
 import prefux.util.force.ForceItem;
 import prefux.util.force.ForceSimulator;
 import prefux.util.force.NBodyForce;
 import prefux.util.force.SpringForce;
+import prefux.visual.DecoratorItem;
 import prefux.visual.EdgeItem;
 import prefux.visual.VisualItem;
 
@@ -60,12 +65,13 @@ public class GraphEmbedderLayout extends Layout {
 	private boolean initialized = false;
 	private int nrRounds = 0;
 	private int maxRounds;
-	private double globalTemp = 2048;
+	private double globalTemp = 1024;
 	private double[] sumPos = new double[2];
 	
 	private final double maxTemp					= 256;
-	private final double desiredTemp				= 1;
-	private final double desiredEdgeLength			= 128;
+	private final double desiredTemp				= 50;
+	private final double desiredEdgeLength			= 256;
+	//private final double gravitationalConstant		= (double)1 / 16;
 	private final double gravitationalConstant		= (double)1 / 16;
 	
 	private final double oscillationOpeningAngle	= Math.PI / 4;
@@ -78,7 +84,7 @@ public class GraphEmbedderLayout extends Layout {
 		private final VisualItem item;
 		private double[] impulse = new double[2];
 		private double skew = 0;
-		private double temp = 100;
+		private double temp = 256;
 		
 		Vertex(VisualItem item) {
 			this.item = item;
@@ -103,135 +109,23 @@ public class GraphEmbedderLayout extends Layout {
 	
 	/* ----------------------------------------------- */
 
-	private ForceSimulator	       m_fsim;
-	private boolean	               m_runonce;
-
-	private boolean	               m_enforceBounds;
-
-	protected transient VisualItem	referrer;
-
-	protected String	           m_nodeGroup;
-	protected String	           m_edgeGroup;
-	
+	protected transient VisualItem referrer;
+	protected String m_nodeGroup;
+	protected String m_edgeGroup;
 	private static final Logger log = LogManager.getLogger(GraphEmbedderLayout.class);
-
-
+	
 	/**
-	 * Create a new GraphEmbedderLayout. By default, this layout will not
-	 * restrict the layout to the layout bounds and will assume it is being run
-	 * in animated (rather than run-once) fashion.
+	 * Create a new GraphEmbedderLayout.
 	 * 
 	 * @param graph
 	 *            the data group to layout. Must resolve to a Graph instance.
 	 */
 	public GraphEmbedderLayout(String graph) {
-		this(graph, false, false);
+		super(graph);
+		m_nodeGroup = PrefuseLib.getGroupName(graph, Graph.NODES);
+		m_edgeGroup = PrefuseLib.getGroupName(graph, Graph.EDGES);
 	}
-
-	/**
-	 * Create a new GraphEmbedderLayout. The layout will assume it is being run
-	 * in animated (rather than run-once) fashion.
-	 * 
-	 * @param group
-	 *            the data group to layout. Must resolve to a Graph instance.
-	 * @param enforceBounds
-	 *            indicates whether or not the layout should require that all
-	 *            node placements stay within the layout bounds.
-	 */
-	public GraphEmbedderLayout(String group, boolean enforceBounds) {
-		this(group, enforceBounds, false);
-	}
-
-	/**
-	 * Create a new GraphEmbedderLayout.
-	 * 
-	 * @param group
-	 *            the data group to layout. Must resolve to a Graph instance.
-	 * @param enforceBounds
-	 *            indicates whether or not the layout should require that all
-	 *            node placements stay within the layout bounds.
-	 * @param runonce
-	 *            indicates if the layout will be run in a run-once or animated
-	 *            fashion. In run-once mode, the layout will run for a set
-	 *            number of iterations when invoked. In animation mode, only one
-	 *            iteration of the layout is computed.
-	 */
-	public GraphEmbedderLayout(String group, boolean enforceBounds,
-	        boolean runonce) {
-		super(group);
-		m_nodeGroup = PrefuseLib.getGroupName(group, Graph.NODES);
-		m_edgeGroup = PrefuseLib.getGroupName(group, Graph.EDGES);
-
-		m_enforceBounds = enforceBounds;
-		m_runonce = runonce;
-		m_fsim = new ForceSimulator();
-		m_fsim.addForce(new NBodyForce());
-		m_fsim.addForce(new SpringForce());
-		m_fsim.addForce(new DragForce());
-	}
-
-	/**
-	 * Create a new GraphEmbedderLayout. The layout will assume it is being run
-	 * in animated (rather than run-once) fashion.
-	 * 
-	 * @param group
-	 *            the data group to layout. Must resolve to a Graph instance.
-	 * @param fsim
-	 *            the force simulator used to drive the layout computation
-	 * @param enforceBounds
-	 *            indicates whether or not the layout should require that all
-	 *            node placements stay within the layout bounds.
-	 */
-	public GraphEmbedderLayout(String group, ForceSimulator fsim,
-	        boolean enforceBounds) {
-		this(group, fsim, enforceBounds, false);
-	}
-
-	/**
-	 * Create a new GraphEmbedderLayout.
-	 * 
-	 * @param group
-	 *            the data group to layout. Must resolve to a Graph instance.
-	 * @param fsim
-	 *            the force simulator used to drive the layout computation
-	 * @param enforceBounds
-	 *            indicates whether or not the layout should require that all
-	 *            node placements stay within the layout bounds.
-	 * @param runonce
-	 *            indicates if the layout will be run in a run-once or animated
-	 *            fashion. In run-once mode, the layout will run for a set
-	 *            number of iterations when invoked. In animation mode, only one
-	 *            iteration of the layout is computed.
-	 */
-	public GraphEmbedderLayout(String group, ForceSimulator fsim,
-	        boolean enforceBounds, boolean runonce) {
-		super(group);
-		m_nodeGroup = PrefuseLib.getGroupName(group, Graph.NODES);
-		m_edgeGroup = PrefuseLib.getGroupName(group, Graph.EDGES);
-
-		m_enforceBounds = enforceBounds;
-		m_runonce = runonce;
-		m_fsim = fsim;
-	}
-
-	// ------------------------------------------------------------------------
-
-	/**
-	 * Explicitly sets the node and edge groups to use for this layout,
-	 * overriding the group setting passed to the constructor.
-	 * 
-	 * @param nodeGroup
-	 *            the node data group
-	 * @param edgeGroup
-	 *            the edge data group
-	 */
-	public void setDataGroups(String nodeGroup, String edgeGroup) {
-		m_nodeGroup = nodeGroup;
-		m_edgeGroup = edgeGroup;
-	}
-
-	// ------------------------------------------------------------------------
-
+	
 	private void init() {
 		
 		System.out.println("-------------------------------------");
@@ -256,7 +150,12 @@ public class GraphEmbedderLayout extends Layout {
 			sumPos[1] += newY;
 			
 			nodeList.add(new Vertex(item));
+			
+			//System.out.println(item.getSize());
+			//item.setSize(Math.pow(item.getSize(), 2));
+			item.setSize(item.getSize() * 3);
 		}
+		
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		
 		maxRounds = nodeList.size() * 4;
@@ -276,11 +175,60 @@ public class GraphEmbedderLayout extends Layout {
 	 */
 	public void run(double frac) {
 		
+		long startTime = System.nanoTime();
+		
 		if(!initialized) {
 			init();
 		}
 		
-		if(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		FxDisplay display = (FxDisplay)getVisualization().getDisplay(0);
+		
+		//if(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		//while(nrRounds < 5) {
+			
+			// TODO: ADJUST DISPLAY???
+			/*double[] bary = calculateBarycenter();
+			Point2D p = new Point2D(bary[0], bary[1]);*/
+			
+			double minX = 0;
+			double minY = 0;
+			//double maxX = 0;
+			//double maxY = 0;
+			for(Vertex v : nodeList) {
+				minX = (v.getItem().getX() < minX) ? v.getItem().getX() : minX;
+				minY = (v.getItem().getY() < minY) ? v.getItem().getY() : minY;
+				
+				/*maxX = (v.getItem().getX() > maxX) ? v.getItem().getX() : maxX;
+				maxY = (v.getItem().getY() > maxY) ? v.getItem().getY() : maxY;*/
+			}
+			double zoom = 0.1;
+			//display.zoom(new Point2D(5, 5), zoom);
+			//display.zoom(p, zoom);
+			
+			/*System.out.println("BEFORE");
+			System.out.println(display.zoomPivotXProperty());
+			System.out.println(display.zoomPivotYProperty());*/
+			
+			display.zoomPivotXProperty().set(minX);
+			display.zoomPivotYProperty().set(minY);
+			//display.zoomPivotXProperty().set(bary[0]);
+			//display.zoomPivotYProperty().set(bary[1]);
+			
+			/*System.out.println("AFTER");
+			System.out.println(display.zoomPivotXProperty());
+			System.out.println(display.zoomPivotYProperty());*/
+			
+			/*if(nrRounds == 4) {
+				break;
+			}*/
+			
+			/*System.out.println("disp x: " + getVisualization().getDisplay(0).getDisplayX()); // TOP LEFT
+			System.out.println("disp y: " + getVisualization().getDisplay(0).getDisplayY()); // TOP LEFT
+			System.out.println("scale: " + getVisualization().getDisplay(0).getScale()); // UNIMPLEMENTED METHOD?*/
+			
+			
+			// -----------------------
 			
 			System.out.println("ROUND " + (nrRounds + 1));
 			
@@ -292,12 +240,18 @@ public class GraphEmbedderLayout extends Layout {
 				
 				double[] imp = calculateImpulse(v);
 				calculateTemperature(v, imp);
+				
+				//System.out.println(v.getItem().getSourceTuple());
+				//v.getItem().setVisible(false);
+				//v.getItem().setExpanded(false);
 			}
 			
 			globalTemp = globalTemp / nodeList.size();
 			System.out.println("Global temperature: " + globalTemp);
 			
 			++nrRounds;
+			
+			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 		}
 	}
 	
@@ -306,7 +260,7 @@ public class GraphEmbedderLayout extends Layout {
 		return 1 + deg / 2;
 	}
 	
-	private double[] calculateBarycenter() {
+	public double[] calculateBarycenter() {
 		double[] center = new double[2];
 		center[0] = sumPos[0] / nodeList.size();
 		center[1] = sumPos[1] / nodeList.size();
@@ -431,86 +385,6 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		
 		globalTemp += v.getTemp();
-	}
-
-	/**
-	 * Get the mass value associated with the given node. Subclasses should
-	 * override this method to perform custom mass assignment.
-	 * 
-	 * @param n
-	 *            the node for which to compute the mass value
-	 * @return the mass value for the node. By default, all items are given a
-	 *         mass value of 1.0.
-	 */
-	protected double getMassValue(VisualItem n) {
-		return 1.0f;
-	}
-
-	/**
-	 * Get the spring length for the given edge. Subclasses should override this
-	 * method to perform custom spring length assignment.
-	 * 
-	 * @param e
-	 *            the edge for which to compute the spring length
-	 * @return the spring length for the edge. A return value of -1 means to
-	 *         ignore this method and use the global default.
-	 */
-	protected double getSpringLength(EdgeItem e) {
-		return -1.;
-	}
-
-	/**
-	 * Get the spring coefficient for the given edge, which controls the tension
-	 * or strength of the spring. Subclasses should override this method to
-	 * perform custom spring tension assignment.
-	 * 
-	 * @param e
-	 *            the edge for which to compute the spring coefficient.
-	 * @return the spring coefficient for the edge. A return value of -1 means
-	 *         to ignore this method and use the global default.
-	 */
-	protected double getSpringCoefficient(EdgeItem e) {
-		return -1.;
-	}
-
-	/**
-	 * Get the referrer item to use to set x or y coordinates that are
-	 * initialized to NaN.
-	 * 
-	 * @return the referrer item.
-	 * @see prefux.util.PrefuseLib#setX(VisualItem, VisualItem, double)
-	 * @see prefux.util.PrefuseLib#setY(VisualItem, VisualItem, double)
-	 */
-	public VisualItem getReferrer() {
-		return referrer;
-	}
-
-	/**
-	 * Set the referrer item to use to set x or y coordinates that are
-	 * initialized to NaN.
-	 * 
-	 * @param referrer
-	 *            the referrer item to use.
-	 * @see prefux.util.PrefuseLib#setX(VisualItem, VisualItem, double)
-	 * @see prefux.util.PrefuseLib#setY(VisualItem, VisualItem, double)
-	 */
-	public void setReferrer(VisualItem referrer) {
-		this.referrer = referrer;
-	}
-
-	// ------------------------------------------------------------------------
-	// ForceItem Schema Addition
-
-	/**
-	 * The data field in which the parameters used by this layout are stored.
-	 */
-	public static final String	FORCEITEM	     = "_forceItem";
-	/**
-	 * The schema for the parameters used by this layout.
-	 */
-	public static final Schema	FORCEITEM_SCHEMA	= new Schema();
-	static {
-		FORCEITEM_SCHEMA.addColumn(FORCEITEM, ForceItem.class, new ForceItem());
 	}
 
 } // end of class GraphEmbedderLayout
