@@ -47,6 +47,7 @@ import prefux.data.Node;
 import prefux.data.Schema;
 import prefux.data.util.Point2D;
 import prefux.data.util.Rectangle2D;
+import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
 import prefux.util.force.DragForce;
 import prefux.util.force.ForceItem;
@@ -86,7 +87,7 @@ public class GraphEmbedderLayout extends Layout {
 		
 		public double x;
 		public double y;
-		//public List<Vertex> neighbours = new ArrayList<>();
+		public List<Vertex> neighbours = new ArrayList<>();
 		
 		Vertex(VisualItem item) {
 			this.item = item;
@@ -136,15 +137,11 @@ public class GraphEmbedderLayout extends Layout {
 		while (iter.hasNext()) {
 			VisualItem item = iter.next();
 			
-			double newX = (Math.random() * 1280);
-			double newY = (Math.random() * 720);
-			//newX = 1;
-			//newY = 1;
+			double newX = (Math.random() * 2048) - 1024;
+			double newY = (Math.random() * 2048) - 1024;
 			
-			setX(item, referrer, (Math.random() * newX));
-			setY(item, referrer, (Math.random() * newY));
-			
-			//System.out.println(item.getSourceTuple());
+			item.setX(newX);
+			item.setY(newY);
 			
 			sumPos[0] += newX;
 			sumPos[1] += newY;
@@ -157,6 +154,8 @@ public class GraphEmbedderLayout extends Layout {
 			item.setSize(item.getSize() * 3);
 		}
 		
+		System.out.println("Nodes added to list: " + nodeList.size() + ".");
+		
 		for(Vertex v : nodeList) {
 			Iterator<? extends Edge> it = ((Node)v.getItem()).edges();
 			while(it.hasNext()) {
@@ -168,14 +167,24 @@ public class GraphEmbedderLayout extends Layout {
 				if(u == v.getItem()) {
 					u = (VisualItem)e.getTargetNode();
 				}
+				
+				for(Vertex v2 : nodeList) {
+					if(u.equals(v2.getItem())) {
+						v.neighbours.add(v2);
+					}
+				}
 			}
 		}
 		
+		/*for(Vertex v : nodeList) {
+			System.out.println(v.neighbours.size());
+		}*/
+		
+		System.out.println("Edges added to vertices.");
 		
 		
 		
 		
-		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		
 		maxRounds = nodeList.size() * 4;
 		System.out.println("maxRounds set to: " + maxRounds + ".");
@@ -268,20 +277,22 @@ public class GraphEmbedderLayout extends Layout {
 			
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
-			
-			if(nrRounds % 5 == 0) {
-			//if(globalTemp < desiredTemp) {
+			// Update the graph every n rounds
+			int n = 20;
+			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.getItem().setX(v.x);
 					v.getItem().setY(v.y);
+					if(globalTemp < desiredTemp) {
+						v.getItem().setFillColor(ColorLib.rgb(0, 150, 0));
+					}
 				}
 			}
 		}
 	}
 	
 	private double calculateScalingFactor(Vertex v) {
-		double deg = ((Node)v.getItem()).getDegree();// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE! NOT REALLY THOUGH BUT YOU KNOW
-		return 1 + deg / 2;
+		return 1 + v.neighbours.size() / 2;
 	}
 	
 	private double[] calculateBarycenter() {
@@ -294,12 +305,8 @@ public class GraphEmbedderLayout extends Layout {
 	private double[] calculateImpulse(Vertex v) {
 		
 		// Attraction to center of gravity
-		
 		double[] impulse = new double[2];
 		impulse = calculateBarycenter();
-		
-		/*impulse[0] = impulse[0] - v.getItem().getX();
-		impulse[1] = impulse[1] - v.getItem().getY();*/
 		
 		impulse[0] = impulse[0] - v.x;
 		impulse[1] = impulse[1] - v.y;
@@ -309,50 +316,30 @@ public class GraphEmbedderLayout extends Layout {
 		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
 		
 		// Random disturbance vector; default range: [-32,32] * [-32,32]
-		
 		impulse[0] += Math.random() * 40 - 20;
 		impulse[1] += Math.random() * 40 - 20;
 		
 		// For every node in the graph: calculate repulsive forces
-		
 		for(Vertex u : nodeList) {
 			if(u.getItem() != v.getItem()) {
 				double[] delta = new double[2];
-				/*delta[0] = v.getItem().getX() - u.getItem().getX();
-				delta[1] = v.getItem().getY() - u.getItem().getY();*/
 				
 				delta[0] = v.x - u.x;
 				delta[1] = v.y - u.y;
 				
-				impulse[0] = impulse[0] + delta[0]
-						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
-				impulse[1] = impulse[1] + delta[1]
-						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
+				impulse[0] = impulse[0] + delta[0] * Math.pow(desiredEdgeLength, 2)
+						/ Math.pow(delta[0], 2);
+				impulse[1] = impulse[1] + delta[1] * Math.pow(desiredEdgeLength, 2)
+						/ Math.pow(delta[1], 2);
 			}
 		}
 		
 		// For every node connected to v: calculate attractive forces
-		
-		Iterator<? extends Edge> it = ((Node)v.getItem()).edges();
-		while(it.hasNext()) {
-			Edge e = it.next();
-			VisualItem u = (VisualItem)e.getSourceNode();
-			
-			// Make sure u and v are not the same node
-			
-			if(u == v.getItem()) {
-				u = (VisualItem)e.getTargetNode();
-			}
-			
-			// Calculate attractive forces
-			
+		for(Vertex u : v.neighbours) {
 			double[] delta = new double[2];
-			/*delta[0] = v.getItem().getX() - u.getX();
-			delta[1] = v.getItem().getY() - u.getY();*/
 			
-			delta[0] = v.x - u.getX(); // PROBLEM HERE!
-			delta[1] = v.y - u.getY();// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!
-			// STORE A LIST OF CONNECTED NODES IN VERTEX?
+			delta[0] = v.x - u.x;
+			delta[1] = v.y - u.y;
 			
 			impulse[0] = impulse[0] - delta[0] * Math.pow(delta[0], 2)
 					/ (Math.pow(desiredEdgeLength, 2) * scalingFactor);
@@ -372,17 +359,9 @@ public class GraphEmbedderLayout extends Layout {
 			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
 			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
 			
-			/*double oldX = v.getItem().getX();
-			double oldY = v.getItem().getY();*/
-			
-			double oldX = v.x;
-			double oldY = v.y;
-			
-			/*v.getItem().setX(oldX + impulse[0]);
-			v.getItem().setY(oldY + impulse[1]);*/
-			
-			v.x = oldX + impulse[0];
-			v.y = oldY + impulse[1];
+			// Update v's coordinates
+			v.x += impulse[0];
+			v.y += impulse[1];
 			
 			// Update the sum of all node-coordinates
 			sumPos[0] += impulse[0];
