@@ -59,8 +59,6 @@ import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
 	
-	/* -------------------- ADDED -------------------- */
-	
 	private List<Vertex> nodeList = new ArrayList<>();
 	private boolean initialized = false;
 	private int nrRounds = 0;
@@ -86,6 +84,10 @@ public class GraphEmbedderLayout extends Layout {
 		private double skew = 0;
 		private double temp = 256;
 		
+		public double x;
+		public double y;
+		//public List<Vertex> neighbours = new ArrayList<>();
+		
 		Vertex(VisualItem item) {
 			this.item = item;
 			impulse[0] = 0;
@@ -106,8 +108,6 @@ public class GraphEmbedderLayout extends Layout {
 		public double getSkew() { return skew; }
 		public double getTemp() { return temp; }
 	}
-	
-	/* ----------------------------------------------- */
 
 	protected transient VisualItem referrer;
 	protected String m_nodeGroup;
@@ -149,12 +149,31 @@ public class GraphEmbedderLayout extends Layout {
 			sumPos[0] += newX;
 			sumPos[1] += newY;
 			
-			nodeList.add(new Vertex(item));
+			Vertex v = new Vertex(item);
+			v.x = item.getX();
+			v.y = item.getY();
+			nodeList.add(v);
 			
-			//System.out.println(item.getSize());
-			//item.setSize(Math.pow(item.getSize(), 2));
 			item.setSize(item.getSize() * 3);
 		}
+		
+		for(Vertex v : nodeList) {
+			Iterator<? extends Edge> it = ((Node)v.getItem()).edges();
+			while(it.hasNext()) {
+				Edge e = it.next();
+				VisualItem u = (VisualItem)e.getSourceNode();
+				
+				// Make sure u and v are not the same node
+				
+				if(u == v.getItem()) {
+					u = (VisualItem)e.getTargetNode();
+				}
+			}
+		}
+		
+		
+		
+		
 		
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		
@@ -187,7 +206,6 @@ public class GraphEmbedderLayout extends Layout {
 		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
 		//while(nrRounds < 5) {
 			
-			// TODO: ADJUST DISPLAY???
 			/*double[] bary = calculateBarycenter();
 			Point2D p = new Point2D(bary[0], bary[1]);*/
 			
@@ -195,14 +213,11 @@ public class GraphEmbedderLayout extends Layout {
 			double minY = 0;
 			//double maxX = 0;
 			//double maxY = 0;
-			for(Vertex v : nodeList) {
+			/*for(Vertex v : nodeList) {
 				minX = (v.getItem().getX() < minX) ? v.getItem().getX() : minX;
 				minY = (v.getItem().getY() < minY) ? v.getItem().getY() : minY;
-				
-				/*maxX = (v.getItem().getX() > maxX) ? v.getItem().getX() : maxX;
-				maxY = (v.getItem().getY() > maxY) ? v.getItem().getY() : maxY;*/
 			}
-			double zoom = 0.1;
+			double zoom = 0.1;*/
 			//display.zoom(new Point2D(5, 5), zoom);
 			//display.zoom(p, zoom);
 			
@@ -210,8 +225,8 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println(display.zoomPivotXProperty());
 			System.out.println(display.zoomPivotYProperty());*/
 			
-			display.zoomPivotXProperty().set(minX);
-			display.zoomPivotYProperty().set(minY);
+			/*display.zoomPivotXProperty().set(minX);
+			display.zoomPivotYProperty().set(minY);*/
 			//display.zoomPivotXProperty().set(bary[0]);
 			//display.zoomPivotYProperty().set(bary[1]);
 			
@@ -252,15 +267,24 @@ public class GraphEmbedderLayout extends Layout {
 			++nrRounds;
 			
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
+			
+			
+			if(nrRounds % 5 == 0) {
+			//if(globalTemp < desiredTemp) {
+				for(Vertex v : nodeList) {
+					v.getItem().setX(v.x);
+					v.getItem().setY(v.y);
+				}
+			}
 		}
 	}
 	
 	private double calculateScalingFactor(Vertex v) {
-		double deg = ((Node)v.getItem()).getDegree();
+		double deg = ((Node)v.getItem()).getDegree();// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE! NOT REALLY THOUGH BUT YOU KNOW
 		return 1 + deg / 2;
 	}
 	
-	public double[] calculateBarycenter() {
+	private double[] calculateBarycenter() {
 		double[] center = new double[2];
 		center[0] = sumPos[0] / nodeList.size();
 		center[1] = sumPos[1] / nodeList.size();
@@ -274,8 +298,11 @@ public class GraphEmbedderLayout extends Layout {
 		double[] impulse = new double[2];
 		impulse = calculateBarycenter();
 		
-		impulse[0] = impulse[0] - v.getItem().getX();
-		impulse[1] = impulse[1] - v.getItem().getY();
+		/*impulse[0] = impulse[0] - v.getItem().getX();
+		impulse[1] = impulse[1] - v.getItem().getY();*/
+		
+		impulse[0] = impulse[0] - v.x;
+		impulse[1] = impulse[1] - v.y;
 		
 		double scalingFactor = calculateScalingFactor(v);
 		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
@@ -291,8 +318,11 @@ public class GraphEmbedderLayout extends Layout {
 		for(Vertex u : nodeList) {
 			if(u.getItem() != v.getItem()) {
 				double[] delta = new double[2];
-				delta[0] = v.getItem().getX() - u.getItem().getX();
-				delta[1] = v.getItem().getY() - u.getItem().getY();
+				/*delta[0] = v.getItem().getX() - u.getItem().getX();
+				delta[1] = v.getItem().getY() - u.getItem().getY();*/
+				
+				delta[0] = v.x - u.x;
+				delta[1] = v.y - u.y;
 				
 				impulse[0] = impulse[0] + delta[0]
 						* Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
@@ -317,8 +347,12 @@ public class GraphEmbedderLayout extends Layout {
 			// Calculate attractive forces
 			
 			double[] delta = new double[2];
-			delta[0] = v.getItem().getX() - u.getX();
-			delta[1] = v.getItem().getY() - u.getY();
+			/*delta[0] = v.getItem().getX() - u.getX();
+			delta[1] = v.getItem().getY() - u.getY();*/
+			
+			delta[0] = v.x - u.getX(); // PROBLEM HERE!
+			delta[1] = v.y - u.getY();// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!// PROBLEM HERE!
+			// STORE A LIST OF CONNECTED NODES IN VERTEX?
 			
 			impulse[0] = impulse[0] - delta[0] * Math.pow(delta[0], 2)
 					/ (Math.pow(desiredEdgeLength, 2) * scalingFactor);
@@ -329,7 +363,7 @@ public class GraphEmbedderLayout extends Layout {
 		return impulse;
 	}
 	
-	public void calculateTemperature(Vertex v, double[] impulse) {
+	private void calculateTemperature(Vertex v, double[] impulse) {
 		
 		// If the current impulse is not 0 
 		if(impulse[0] != 0 || impulse[1] != 0) {
@@ -338,11 +372,17 @@ public class GraphEmbedderLayout extends Layout {
 			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
 			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
 			
-			double oldX = v.getItem().getX();
-			double oldY = v.getItem().getY();
+			/*double oldX = v.getItem().getX();
+			double oldY = v.getItem().getY();*/
 			
-			v.getItem().setX(oldX + impulse[0]);
-			v.getItem().setY(oldY + impulse[1]);
+			double oldX = v.x;
+			double oldY = v.y;
+			
+			/*v.getItem().setX(oldX + impulse[0]);
+			v.getItem().setY(oldY + impulse[1]);*/
+			
+			v.x = oldX + impulse[0];
+			v.y = oldY + impulse[1];
 			
 			// Update the sum of all node-coordinates
 			sumPos[0] += impulse[0];
