@@ -83,7 +83,7 @@ public class GraphEmbedderLayout extends Layout {
 		private final VisualItem item;
 		private double[] impulse = new double[2];
 		private double skew = 0;
-		private double temp = 256;
+		private double temp = 3000;
 		
 		public double x;
 		public double y;
@@ -278,7 +278,7 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 20;
+			int n = 5;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.getItem().setX(v.x);

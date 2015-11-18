@@ -5,10 +5,10 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.input.RotateEvent;
+import javafx.scene.input.TouchEvent;
+import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -21,15 +21,10 @@ import prefux.action.assignment.DataColorAction;
 import prefux.action.assignment.NodeDegreeSizeAction;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
-import prefux.controls.DragControl;
-import prefux.controls.ZoomControl;
 import prefux.data.Graph;
 import prefux.data.Table;
-import prefux.data.Tuple;
 import prefux.data.expression.Predicate;
 import prefux.data.expression.parser.ExpressionParser;
-import prefux.data.io.DataIOException;
-import prefux.data.io.GraphMLReader;
 import prefux.data.util.Point2D;
 import prefux.render.DefaultRendererFactory;
 import prefux.render.LabelRenderer;
@@ -38,7 +33,6 @@ import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
 import prefux.visual.VisualItem;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,8 +57,12 @@ public class GemTest extends Application {
 	Table nodeTable = new Table();
 	Table edgeTable = new Table();
 	List<OntClass> ontList = new ArrayList<>();
-	double[] mouseXY = new double[2];
-	double lastX, lastY;
+	//double lastX, lastY;
+	
+	private double startScale, startRotate;
+    private boolean moveInProgress = false;
+    private int touchPointId;
+    private Point2D prevPos;
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -187,38 +185,18 @@ public class GemTest extends Application {
 			//root.setContent(display);
 			root.getChildren().addAll(display);
 			
+			vis.run("nodes");
+			vis.run("layout");
 			
 			
-			root.setOnMousePressed(event -> { // DO I NEED THIS?
-				lastX = event.getX();
-                lastY = event.getY();
-                
-                event.consume();
-			});
 			
-			root.setOnMouseDragged(event -> {
-				/*double layoutX = root.getLayoutX() + (event.getX() - lastX);
-                double layoutY = root.getLayoutY() + (event.getY() - lastY);
-                root.setLayoutX(layoutX);
-                root.setLayoutY(layoutY);*/
-                
-                event.consume();
-			});
-			
-			
-			/*root.setOnMouseMoved(event -> {
-				mouseXY[0] = event.getSceneX();
-				mouseXY[1] = event.getSceneY();
-			});*/
-			
-			
+			/******************** TOUCH-FUNCTIONALITY ********************/
 			root.setOnScroll(event -> {
 	            double zoomFactor = 1.05;
 	            double deltaY = event.getDeltaY();
 	            if(deltaY < 0) {
 	            	zoomFactor = 2.0 - zoomFactor;
 	            }
-	            //System.out.println(zoomFactor);
 	            
 	            root.setScaleX(root.getScaleX() * zoomFactor);
 	            root.setScaleY(root.getScaleY() * zoomFactor);
@@ -226,52 +204,60 @@ public class GemTest extends Application {
 	            event.consume();
 			});
 			
+			root.setOnTouchPressed(event -> {
+				if(moveInProgress == false) {
+					moveInProgress = true;
+					touchPointId = event.getTouchPoint().getId();
+					prevPos = new Point2D(event.getTouchPoint().getSceneX(), event.getTouchPoint().getSceneY());
+				}
+				event.consume();
+	        });
 			
+			root.setOnTouchMoved(event -> {
+				if(moveInProgress == true && event.getTouchPoint().getId() == touchPointId) {
+					Point2D currPos = new Point2D(event.getTouchPoint().getSceneX(), event.getTouchPoint().getSceneY());
+					double[] translationVector = new double[2];
+					
+					translationVector[0] = currPos.getX() - prevPos.getX();
+					translationVector[1] = currPos.getY() - prevPos.getY();
+					
+					root.setTranslateX(root.getTranslateX() + translationVector[0]);
+					root.setTranslateY(root.getTranslateY() + translationVector[1]);
+					prevPos = currPos;
+				}
+				event.consume();
+	        });
 			
-			/*root.setOnScroll(new EventHandler<ScrollEvent>() {
-	              @Override
-	              public void handle(ScrollEvent event) {
-	            	  //double zoomFactor = 1.25;
-	            	  double deltaY = event.getDeltaY();
-	            	  if(deltaY < 0) {
-	            		  zoomFactor -= 0.05;
-	            		  System.out.println("SCROLL DOWN");
-	            	  } else {
-	            		  zoomFactor += 0.05;
-	            		  System.out.println("SCROLL UP");
-	            	  }
-	            	  //System.out.println("zoomFactor: " + zoomFactor);
-	            	  
-	            	  //Point2D anchor = new Point2D(event.getX(), event.getY());
-	            	  //Point2D anchor = new Point2D(display.getDisplayX(), display.getDisplayY());
-	            	  //System.out.println("anchor: " + anchor);
-	            	  // coordinates here are not the same as in ZoomControl
-	            	  
-	            	  
-	            	  double[] bary = algo.calculateBarycenter();
-	            	  Point2D anchor = new Point2D(bary[0], bary[1]);
-	            	  display.zoom(anchor, zoomFactor);
-	            	  
-	            	  System.err.println(anchor);
-	            	  System.err.println(display.getDisplayX() + ", " + display.getDisplayY());
-	            	  
-	            	  event.consume();
-	              }
-			});*/
+			root.setOnTouchReleased(event -> {
+				if(event.getTouchPoint().getId() == touchPointId) {
+					moveInProgress = false;
+				}
+				event.consume();
+	        });
 			
+			root.setOnZoomStarted(event -> {
+				startScale = root.getScaleX();
+				event.consume();
+	        });
 			
+			root.setOnZoom(event -> {
+				root.setScaleX(startScale * event.getTotalZoomFactor());
+				root.setScaleY(startScale * event.getTotalZoomFactor());
+				event.consume();
+	        });
+	        
+			root.setOnRotationStarted(event -> {
+				startRotate = root.getRotate();
+				event.consume();
+	        });
 			
-			
-			
-			
-			
-			
-			//root.setTop(buildControlPanel(display));
-			vis.run("nodes");
-			vis.run("layout");
-			
-
-		} /*catch (DataIOException e) {
+			root.setOnRotate(event -> {
+				root.setRotate(startRotate + event.getTotalAngle());
+				event.consume();
+	        });
+			/******************** TOUCH-FUNCTIONALITY ********************/
+		}
+		/*catch (DataIOException e) {
 			e.printStackTrace();
 			System.err.println("Error loading graph. Exiting...");
 			System.exit(1);
