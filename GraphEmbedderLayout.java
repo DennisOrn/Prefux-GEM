@@ -38,24 +38,12 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import prefux.Display;
-import prefux.FxDisplay;
 import prefux.action.layout.Layout;
 import prefux.data.Edge;
 import prefux.data.Graph;
 import prefux.data.Node;
-import prefux.data.Schema;
-import prefux.data.util.Point2D;
-import prefux.data.util.Rectangle2D;
 import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
-import prefux.util.force.DragForce;
-import prefux.util.force.ForceItem;
-import prefux.util.force.ForceSimulator;
-import prefux.util.force.NBodyForce;
-import prefux.util.force.SpringForce;
-import prefux.visual.DecoratorItem;
-import prefux.visual.EdgeItem;
 import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
@@ -83,11 +71,11 @@ public class GraphEmbedderLayout extends Layout {
 		private final VisualItem item;
 		private double[] impulse = new double[2];
 		private double skew = 0;
-		private double temp = 3000;
+		private double temp = 256;
 		
 		public double x;
 		public double y;
-		public List<Vertex> neighbours = new ArrayList<>();
+		public List<Vertex> neighbors = new ArrayList<>();
 		
 		Vertex(VisualItem item) {
 			this.item = item;
@@ -132,7 +120,7 @@ public class GraphEmbedderLayout extends Layout {
 		System.out.println("-------------------------------------");
 		System.out.println("Initializing algorithm...");
 		
-		// Place all nodes in random positions
+		// Place all nodes in random positions and add them to nodeList
 		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
 		while (iter.hasNext()) {
 			VisualItem item = iter.next();
@@ -156,6 +144,7 @@ public class GraphEmbedderLayout extends Layout {
 		
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		
+		// Make sure the neighbors are added to every node
 		for(Vertex v : nodeList) {
 			Iterator<? extends Edge> it = ((Node)v.getItem()).edges();
 			while(it.hasNext()) {
@@ -169,15 +158,15 @@ public class GraphEmbedderLayout extends Layout {
 				}
 				
 				for(Vertex v2 : nodeList) {
-					if(u.equals(v2.getItem())) {
-						v.neighbours.add(v2);
+					if(u == v2.getItem()) {
+						v.neighbors.add(v2);
 					}
 				}
 			}
 		}
 		
 		/*for(Vertex v : nodeList) {
-			System.out.println(v.neighbours.size());
+			System.out.println(v.neighbors.size());
 		}*/
 		
 		System.out.println("Edges added to vertices.");
@@ -209,50 +198,11 @@ public class GraphEmbedderLayout extends Layout {
 			init();
 		}
 		
-		FxDisplay display = (FxDisplay)getVisualization().getDisplay(0);
+		//FxDisplay display = (FxDisplay)getVisualization().getDisplay(0);
 		
 		//if(globalTemp > desiredTemp && nrRounds < maxRounds) {
 		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
-		//while(nrRounds < 5) {
-			
-			/*double[] bary = calculateBarycenter();
-			Point2D p = new Point2D(bary[0], bary[1]);*/
-			
-			double minX = 0;
-			double minY = 0;
-			//double maxX = 0;
-			//double maxY = 0;
-			/*for(Vertex v : nodeList) {
-				minX = (v.getItem().getX() < minX) ? v.getItem().getX() : minX;
-				minY = (v.getItem().getY() < minY) ? v.getItem().getY() : minY;
-			}
-			double zoom = 0.1;*/
-			//display.zoom(new Point2D(5, 5), zoom);
-			//display.zoom(p, zoom);
-			
-			/*System.out.println("BEFORE");
-			System.out.println(display.zoomPivotXProperty());
-			System.out.println(display.zoomPivotYProperty());*/
-			
-			/*display.zoomPivotXProperty().set(minX);
-			display.zoomPivotYProperty().set(minY);*/
-			//display.zoomPivotXProperty().set(bary[0]);
-			//display.zoomPivotYProperty().set(bary[1]);
-			
-			/*System.out.println("AFTER");
-			System.out.println(display.zoomPivotXProperty());
-			System.out.println(display.zoomPivotYProperty());*/
-			
-			/*if(nrRounds == 4) {
-				break;
-			}*/
-			
-			/*System.out.println("disp x: " + getVisualization().getDisplay(0).getDisplayX()); // TOP LEFT
-			System.out.println("disp y: " + getVisualization().getDisplay(0).getDisplayY()); // TOP LEFT
-			System.out.println("scale: " + getVisualization().getDisplay(0).getScale()); // UNIMPLEMENTED METHOD?*/
-			
-			
-			// -----------------------
+		//while(nrRounds < 1) {
 			
 			System.out.println("ROUND " + (nrRounds + 1));
 			
@@ -261,13 +211,8 @@ public class GraphEmbedderLayout extends Layout {
 		
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
-				
 				double[] imp = calculateImpulse(v);
 				calculateTemperature(v, imp);
-				
-				//System.out.println(v.getItem().getSourceTuple());
-				//v.getItem().setVisible(false);
-				//v.getItem().setExpanded(false);
 			}
 			
 			globalTemp = globalTemp / nodeList.size();
@@ -278,7 +223,7 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 5;
+			int n = 1;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.getItem().setX(v.x);
@@ -292,7 +237,7 @@ public class GraphEmbedderLayout extends Layout {
 	}
 	
 	private double calculateScalingFactor(Vertex v) {
-		return 1 + v.neighbours.size() / 2;
+		return 1 + v.neighbors.size() / 2;
 	}
 	
 	private double[] calculateBarycenter() {
@@ -308,44 +253,86 @@ public class GraphEmbedderLayout extends Layout {
 		double[] impulse = new double[2];
 		impulse = calculateBarycenter();
 		
+		//System.out.println("impulse 1: " + impulse[0] + ", " + impulse[1]);
+		
 		impulse[0] = impulse[0] - v.x;
 		impulse[1] = impulse[1] - v.y;
+		
+		//System.out.println("impulse 2: " + impulse[0] + ", " + impulse[1]);
 		
 		double scalingFactor = calculateScalingFactor(v);
 		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
 		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
 		
+		//System.out.println("impulse 3: " + impulse[0] + ", " + impulse[1]);
+		
+		
+		/*
+		 * WORKS^ I THINK
+		impulse[0] = (calculateBarycenter()[0] - v.x) * gravitationalConstant * calculateScalingFactor(v);
+		impulse[1] = (calculateBarycenter()[1] - v.y) * gravitationalConstant * calculateScalingFactor(v);
+		
+		System.out.println("impulse 3 1/2: " + impulse[0] + ", " + impulse[1]);
+		*/
+		
+		
 		// Random disturbance vector; default range: [-32,32] * [-32,32]
 		impulse[0] += Math.random() * 40 - 20;
 		impulse[1] += Math.random() * 40 - 20;
 		
+		//System.out.println("impulse 4: " + impulse[0] + ", " + impulse[1]);
+		
+		/**********************************************************************/
+		/*double[] newImpulse = new double[2];
+		System.arraycopy(impulse, 0, newImpulse, 0, impulse.length);*/
+		/**********************************************************************/
+		
+		double desSquared = Math.pow(desiredEdgeLength, 2);
+		
 		// For every node in the graph: calculate repulsive forces
 		for(Vertex u : nodeList) {
-			if(u.getItem() != v.getItem()) {
-				double[] delta = new double[2];
-				
-				delta[0] = v.x - u.x;
-				delta[1] = v.y - u.y;
-				
-				impulse[0] = impulse[0] + delta[0] * Math.pow(desiredEdgeLength, 2)
-						/ Math.pow(delta[0], 2);
-				impulse[1] = impulse[1] + delta[1] * Math.pow(desiredEdgeLength, 2)
-						/ Math.pow(delta[1], 2);
+			
+			// If u and v are the same: skip iteration
+			if(u.getItem() == v.getItem()) {
+				continue;
+			}
+			
+			double[] delta = new double[2];
+			delta[0] = v.x - u.x;
+			delta[1] = v.y - u.y;
+			
+			/*if(delta[0] != 0 || delta[1] != 0) {
+				impulse[0] = impulse[0] + delta[0] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
+				impulse[1] = impulse[1] + delta[1] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
+			}*/
+			
+			double length = Math.hypot(delta[0], delta[1]); // This is sloooooooooooooooooooooooow
+			
+			if(length != 0) {
+				double lengthSquared = Math.pow(length, 2);
+				impulse[0] = impulse[0] + delta[0] * desSquared / lengthSquared;
+				impulse[1] = impulse[1] + delta[1] * desSquared / lengthSquared;
 			}
 		}
 		
 		// For every node connected to v: calculate attractive forces
-		for(Vertex u : v.neighbours) {
+		for(Vertex u : v.neighbors) {
 			double[] delta = new double[2];
 			
 			delta[0] = v.x - u.x;
 			delta[1] = v.y - u.y;
 			
-			impulse[0] = impulse[0] - delta[0] * Math.pow(delta[0], 2)
-					/ (Math.pow(desiredEdgeLength, 2) * scalingFactor);
-			impulse[1] = impulse[1] - delta[1] * Math.pow(delta[1], 2)
-					/ (Math.pow(desiredEdgeLength, 2) * scalingFactor);
+			/*impulse[0] = impulse[0] - delta[0] * Math.pow(delta[0], 2) / (Math.pow(desiredEdgeLength, 2) * scalingFactor);
+			impulse[1] = impulse[1] - delta[1] * Math.pow(delta[1], 2) / (Math.pow(desiredEdgeLength, 2) * scalingFactor);*/
+			
+			double length = Math.hypot(delta[0], delta[1]);
+			double lengthSquared = Math.pow(length, 2);
+			
+			impulse[0] = impulse[0] - delta[0] * lengthSquared / (desSquared * scalingFactor);
+			impulse[1] = impulse[1] - delta[1] * lengthSquared / (desSquared * scalingFactor);
 		}
+		
+		//System.out.println("impulse 6: " + impulse[0] + ", " + impulse[1]);
 		
 		return impulse;
 	}
@@ -355,9 +342,19 @@ public class GraphEmbedderLayout extends Layout {
 		// If the current impulse is not 0 
 		if(impulse[0] != 0 || impulse[1] != 0) {
 			
+			
+			//System.out.println(impulse[0] + ", " + impulse[1]);
+			
+			
 			// Scale the impulse with the current temperature
-			impulse[0] = v.getTemp() * impulse[0]/Math.abs(impulse[0]);
-			impulse[1] = v.getTemp() * impulse[1]/Math.abs(impulse[1]);
+			double length = Math.hypot(impulse[0], impulse[1]);
+			impulse[0] = v.getTemp() * impulse[0] / length;
+			impulse[1] = v.getTemp() * impulse[1] / length;
+			
+			
+			/*System.out.println(impulse[0] + ", " + impulse[1]);
+			System.out.println("----------------------------------------");*/
+			
 			
 			// Update v's coordinates
 			v.x += impulse[0];
@@ -368,19 +365,24 @@ public class GraphEmbedderLayout extends Layout {
 			sumPos[1] += impulse[1];
 		}
 		
-		double[] oldImpulse = new double[2];
-		oldImpulse[0] = v.getImpulse()[0];
-		oldImpulse[1] = v.getImpulse()[1];
+		double[] oldImpulse = v.getImpulse();
+		
+		//double[] oldImpulse = new double[2];
+		//System.arraycopy(v.getImpulse(), 0, oldImpulse, 0, v.getImpulse().length);
 		
 		// If the last impulse was not 0		
 		if(oldImpulse[0] != 0 || oldImpulse[1] != 0) {
 			
 			// Calculate the angle between the last impulse and the current impulse
-			double uLen = Math.sqrt(Math.pow(impulse[0], 2) + Math.pow(impulse[1], 2));
-			double vLen = Math.sqrt(Math.pow(oldImpulse[0], 2) + Math.pow(oldImpulse[1], 2));
+			double uLen = Math.hypot(impulse[0], impulse[1]);
+			double vLen = Math.hypot(oldImpulse[0], oldImpulse[1]);
 			double dot = impulse[0] * oldImpulse[0] + impulse[1] * oldImpulse[1];
 			double cosAngle = dot / (uLen * vLen);
 			double angle = Math.acos(cosAngle);
+			
+			/*
+			 * angle = NaN?
+			 */
 			
 			// Check for rotation
 			if(Math.sin(angle) >= Math.sin((Math.PI / 2) + (rotationOpeningAngle / 2))) {
@@ -398,11 +400,8 @@ public class GraphEmbedderLayout extends Layout {
 			
 			v.setTemp(v.getTemp() * (1 - Math.abs(v.getSkew())));
 			v.setTemp(Math.min(v.getTemp(), maxTemp));
-			v.setImpulse(impulse);
-		} else {
-			v.setImpulse(impulse);
 		}
-		
+		v.setImpulse(impulse);
 		globalTemp += v.getTemp();
 	}
 
