@@ -223,7 +223,7 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 1;
+			int n = maxRounds;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.getItem().setX(v.x);
@@ -253,39 +253,16 @@ public class GraphEmbedderLayout extends Layout {
 		double[] impulse = new double[2];
 		impulse = calculateBarycenter();
 		
-		//System.out.println("impulse 1: " + impulse[0] + ", " + impulse[1]);
-		
 		impulse[0] = impulse[0] - v.x;
 		impulse[1] = impulse[1] - v.y;
-		
-		//System.out.println("impulse 2: " + impulse[0] + ", " + impulse[1]);
 		
 		double scalingFactor = calculateScalingFactor(v);
 		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
 		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
 		
-		//System.out.println("impulse 3: " + impulse[0] + ", " + impulse[1]);
-		
-		
-		/*
-		 * WORKS^ I THINK
-		impulse[0] = (calculateBarycenter()[0] - v.x) * gravitationalConstant * calculateScalingFactor(v);
-		impulse[1] = (calculateBarycenter()[1] - v.y) * gravitationalConstant * calculateScalingFactor(v);
-		
-		System.out.println("impulse 3 1/2: " + impulse[0] + ", " + impulse[1]);
-		*/
-		
-		
 		// Random disturbance vector; default range: [-32,32] * [-32,32]
 		impulse[0] += Math.random() * 40 - 20;
 		impulse[1] += Math.random() * 40 - 20;
-		
-		//System.out.println("impulse 4: " + impulse[0] + ", " + impulse[1]);
-		
-		/**********************************************************************/
-		/*double[] newImpulse = new double[2];
-		System.arraycopy(impulse, 0, newImpulse, 0, impulse.length);*/
-		/**********************************************************************/
 		
 		double desSquared = Math.pow(desiredEdgeLength, 2);
 		
@@ -301,12 +278,7 @@ public class GraphEmbedderLayout extends Layout {
 			delta[0] = v.x - u.x;
 			delta[1] = v.y - u.y;
 			
-			/*if(delta[0] != 0 || delta[1] != 0) {
-				impulse[0] = impulse[0] + delta[0] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[0], 2);
-				impulse[1] = impulse[1] + delta[1] * Math.pow(desiredEdgeLength, 2) / Math.pow(delta[1], 2);
-			}*/
-			
-			double length = Math.hypot(delta[0], delta[1]); // This is sloooooooooooooooooooooooow
+			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
 			
 			if(length != 0) {
 				double lengthSquared = Math.pow(length, 2);
@@ -322,17 +294,12 @@ public class GraphEmbedderLayout extends Layout {
 			delta[0] = v.x - u.x;
 			delta[1] = v.y - u.y;
 			
-			/*impulse[0] = impulse[0] - delta[0] * Math.pow(delta[0], 2) / (Math.pow(desiredEdgeLength, 2) * scalingFactor);
-			impulse[1] = impulse[1] - delta[1] * Math.pow(delta[1], 2) / (Math.pow(desiredEdgeLength, 2) * scalingFactor);*/
-			
-			double length = Math.hypot(delta[0], delta[1]);
+			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
 			double lengthSquared = Math.pow(length, 2);
 			
 			impulse[0] = impulse[0] - delta[0] * lengthSquared / (desSquared * scalingFactor);
 			impulse[1] = impulse[1] - delta[1] * lengthSquared / (desSquared * scalingFactor);
 		}
-		
-		//System.out.println("impulse 6: " + impulse[0] + ", " + impulse[1]);
 		
 		return impulse;
 	}
@@ -342,19 +309,10 @@ public class GraphEmbedderLayout extends Layout {
 		// If the current impulse is not 0 
 		if(impulse[0] != 0 || impulse[1] != 0) {
 			
-			
-			//System.out.println(impulse[0] + ", " + impulse[1]);
-			
-			
 			// Scale the impulse with the current temperature
-			double length = Math.hypot(impulse[0], impulse[1]);
+			double length = Math.sqrt(impulse[0] * impulse[0] + impulse[1] * impulse[1]);
 			impulse[0] = v.getTemp() * impulse[0] / length;
 			impulse[1] = v.getTemp() * impulse[1] / length;
-			
-			
-			/*System.out.println(impulse[0] + ", " + impulse[1]);
-			System.out.println("----------------------------------------");*/
-			
 			
 			// Update v's coordinates
 			v.x += impulse[0];
@@ -367,15 +325,12 @@ public class GraphEmbedderLayout extends Layout {
 		
 		double[] oldImpulse = v.getImpulse();
 		
-		//double[] oldImpulse = new double[2];
-		//System.arraycopy(v.getImpulse(), 0, oldImpulse, 0, v.getImpulse().length);
-		
 		// If the last impulse was not 0		
 		if(oldImpulse[0] != 0 || oldImpulse[1] != 0) {
 			
 			// Calculate the angle between the last impulse and the current impulse
-			double uLen = Math.hypot(impulse[0], impulse[1]);
-			double vLen = Math.hypot(oldImpulse[0], oldImpulse[1]);
+			double uLen = Math.sqrt(impulse[0] * impulse[0] + impulse[1] * impulse[1]);
+			double vLen = Math.sqrt(oldImpulse[0] * oldImpulse[0] + oldImpulse[1] * oldImpulse[1]);
 			double dot = impulse[0] * oldImpulse[0] + impulse[1] * oldImpulse[1];
 			double cosAngle = dot / (uLen * vLen);
 			double angle = Math.acos(cosAngle);
