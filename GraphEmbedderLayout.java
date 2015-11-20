@@ -55,10 +55,9 @@ public class GraphEmbedderLayout extends Layout {
 	private double globalTemp = 1024;
 	private double[] sumPos = new double[2];
 	
-	private final double maxTemp					= 256;
+	private final double maxTemp					= 1024;
 	private final double desiredTemp				= 50;
 	private final double desiredEdgeLength			= 256;
-	//private final double gravitationalConstant		= (double)1 / 16;
 	private final double gravitationalConstant		= (double)1 / 16;
 	
 	private final double oscillationOpeningAngle	= Math.PI / 4;
@@ -71,31 +70,16 @@ public class GraphEmbedderLayout extends Layout {
 		private final VisualItem item;
 		private double[] impulse = new double[2];
 		private double skew = 0;
-		private double temp = 256;
+		private double temp = 1024;
 		
-		public double x;
-		public double y;
-		public List<Vertex> neighbors = new ArrayList<>();
+		private double[] coordinates = new double[2];
+		private List<Vertex> neighbors = new ArrayList<>();
 		
-		Vertex(VisualItem item) {
+		private Vertex(VisualItem item) {
 			this.item = item;
 			impulse[0] = 0;
 			impulse[1] = 0;
 		}
-		
-		public VisualItem getItem() { return item; }
-		
-		public void setImpulse(double[] impulse) {
-			this.impulse[0] = impulse[0];
-			this.impulse[1] = impulse[1];
-		}
-		
-		public void setSkew(double skew) { this.skew = skew; }
-		public void setTemp(double temp) { this.temp = temp; }
-		
-		public double[] getImpulse() { return impulse; }
-		public double getSkew() { return skew; }
-		public double getTemp() { return temp; }
 	}
 
 	protected transient VisualItem referrer;
@@ -135,8 +119,9 @@ public class GraphEmbedderLayout extends Layout {
 			sumPos[1] += newY;
 			
 			Vertex v = new Vertex(item);
-			v.x = item.getX();
-			v.y = item.getY();
+			v.coordinates[0] = item.getX();
+			v.coordinates[1] = item.getY();
+			
 			nodeList.add(v);
 			
 			item.setSize(item.getSize() * 3);
@@ -146,19 +131,19 @@ public class GraphEmbedderLayout extends Layout {
 		
 		// Make sure the neighbors are added to every node
 		for(Vertex v : nodeList) {
-			Iterator<? extends Edge> it = ((Node)v.getItem()).edges();
+			Iterator<? extends Edge> it = ((Node)v.item).edges();
 			while(it.hasNext()) {
 				Edge e = it.next();
 				VisualItem u = (VisualItem)e.getSourceNode();
 				
 				// Make sure u and v are not the same node
 				
-				if(u == v.getItem()) {
+				if(u == v.item) {
 					u = (VisualItem)e.getTargetNode();
 				}
 				
 				for(Vertex v2 : nodeList) {
-					if(u == v2.getItem()) {
+					if(u == v2.item) {
 						v.neighbors.add(v2);
 					}
 				}
@@ -198,15 +183,12 @@ public class GraphEmbedderLayout extends Layout {
 			init();
 		}
 		
-		//FxDisplay display = (FxDisplay)getVisualization().getDisplay(0);
-		
-		//if(globalTemp > desiredTemp && nrRounds < maxRounds) {
 		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
-		//while(nrRounds < 1) {
 			
+			System.out.println("-------------------------");
 			System.out.println("ROUND " + (nrRounds + 1));
 			
-			// reset the global temperature
+			// Reset the global temperature at the start of every round
 			globalTemp = 0;
 		
 			Collections.shuffle(nodeList);
@@ -223,13 +205,13 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = maxRounds;
+			int n = 1;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
-					v.getItem().setX(v.x);
-					v.getItem().setY(v.y);
+					v.item.setX(v.coordinates[0]);
+					v.item.setY(v.coordinates[1]);
 					if(globalTemp < desiredTemp) {
-						v.getItem().setFillColor(ColorLib.rgb(0, 150, 0));
+						v.item.setFillColor(ColorLib.rgb(0, 0, 180));
 					}
 				}
 			}
@@ -253,8 +235,8 @@ public class GraphEmbedderLayout extends Layout {
 		double[] impulse = new double[2];
 		impulse = calculateBarycenter();
 		
-		impulse[0] = impulse[0] - v.x;
-		impulse[1] = impulse[1] - v.y;
+		impulse[0] = impulse[0] - v.coordinates[0];
+		impulse[1] = impulse[1] - v.coordinates[1];
 		
 		double scalingFactor = calculateScalingFactor(v);
 		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
@@ -270,13 +252,13 @@ public class GraphEmbedderLayout extends Layout {
 		for(Vertex u : nodeList) {
 			
 			// If u and v are the same: skip iteration
-			if(u.getItem() == v.getItem()) {
+			if(u.item == v.item) {
 				continue;
 			}
 			
 			double[] delta = new double[2];
-			delta[0] = v.x - u.x;
-			delta[1] = v.y - u.y;
+			delta[0] = v.coordinates[0] - u.coordinates[0];
+			delta[1] = v.coordinates[1] - u.coordinates[1];
 			
 			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
 			
@@ -291,8 +273,8 @@ public class GraphEmbedderLayout extends Layout {
 		for(Vertex u : v.neighbors) {
 			double[] delta = new double[2];
 			
-			delta[0] = v.x - u.x;
-			delta[1] = v.y - u.y;
+			delta[0] = v.coordinates[0] - u.coordinates[0];
+			delta[1] = v.coordinates[1] - u.coordinates[1];
 			
 			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
 			double lengthSquared = Math.pow(length, 2);
@@ -311,19 +293,19 @@ public class GraphEmbedderLayout extends Layout {
 			
 			// Scale the impulse with the current temperature
 			double length = Math.sqrt(impulse[0] * impulse[0] + impulse[1] * impulse[1]);
-			impulse[0] = v.getTemp() * impulse[0] / length;
-			impulse[1] = v.getTemp() * impulse[1] / length;
+			impulse[0] = v.temp * impulse[0] / length;
+			impulse[1] = v.temp * impulse[1] / length;
 			
 			// Update v's coordinates
-			v.x += impulse[0];
-			v.y += impulse[1];
+			v.coordinates[0] += impulse[0];
+			v.coordinates[1] += impulse[1];
 			
 			// Update the sum of all node-coordinates
 			sumPos[0] += impulse[0];
 			sumPos[1] += impulse[1];
 		}
 		
-		double[] oldImpulse = v.getImpulse();
+		double[] oldImpulse = v.impulse;
 		
 		// If the last impulse was not 0		
 		if(oldImpulse[0] != 0 || oldImpulse[1] != 0) {
@@ -335,29 +317,27 @@ public class GraphEmbedderLayout extends Layout {
 			double cosAngle = dot / (uLen * vLen);
 			double angle = Math.acos(cosAngle);
 			
-			/*
-			 * angle = NaN?
-			 */
-			
 			// Check for rotation
 			if(Math.sin(angle) >= Math.sin((Math.PI / 2) + (rotationOpeningAngle / 2))) {
-				v.setSkew(v.getSkew() + rotationSensitivity * Math.signum(Math.sin(angle)));
+				v.skew = v.skew + rotationSensitivity * Math.signum(Math.sin(angle));
 			}
 			
 			// Check for oscillation OR move in the right direction
 			if(Math.abs(Math.cos(angle)) >= Math.cos(oscillationOpeningAngle / 2)) {
 				if(Math.cos(angle) > 0) { // move in the right direction
-					v.setTemp(v.getTemp() * oscillationSensitivity);
+					v.temp = v.temp * oscillationSensitivity;
 				} else { // oscillation
-					v.setTemp(v.getTemp() / oscillationSensitivity);
+					v.temp = v.temp / oscillationSensitivity;
 				}
 			}
 			
-			v.setTemp(v.getTemp() * (1 - Math.abs(v.getSkew())));
-			v.setTemp(Math.min(v.getTemp(), maxTemp));
+			v.temp = v.temp * (1 - Math.abs(v.skew));
+			v.temp = Math.min(v.temp, maxTemp);
 		}
-		v.setImpulse(impulse);
-		globalTemp += v.getTemp();
+		v.impulse = impulse;
+		
+		// Add the node's temperature to the global temperature
+		globalTemp += v.temp;
 	}
 
 } // end of class GraphEmbedderLayout
