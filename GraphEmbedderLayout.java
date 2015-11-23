@@ -150,15 +150,7 @@ public class GraphEmbedderLayout extends Layout {
 			}
 		}
 		
-		/*for(Vertex v : nodeList) {
-			System.out.println(v.neighbors.size());
-		}*/
-		
 		System.out.println("Edges added to vertices.");
-		
-		
-		
-		
 		
 		maxRounds = nodeList.size() * 4;
 		System.out.println("maxRounds set to: " + maxRounds + ".");
@@ -169,7 +161,6 @@ public class GraphEmbedderLayout extends Layout {
 		initialized = true;
 		
 		System.out.println("Initialization done.");
-		System.out.println("-------------------------------------");
 	}
 	
 	/**
@@ -185,7 +176,7 @@ public class GraphEmbedderLayout extends Layout {
 		
 		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
 			
-			System.out.println("-------------------------");
+			System.out.println("-------------------------------------");
 			System.out.println("ROUND " + (nrRounds + 1));
 			
 			// Reset the global temperature at the start of every round
@@ -205,7 +196,7 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 1;
+			int n = 10;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.item.setX(v.coordinates[0]);
@@ -243,10 +234,10 @@ public class GraphEmbedderLayout extends Layout {
 		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
 		
 		// Random disturbance vector; default range: [-32,32] * [-32,32]
-		impulse[0] += Math.random() * 40 - 20;
-		impulse[1] += Math.random() * 40 - 20;
+		impulse[0] = impulse[0] + Math.random() * 40 - 20;
+		impulse[1] = impulse[1] + Math.random() * 40 - 20;
 		
-		double desSquared = Math.pow(desiredEdgeLength, 2);
+		double desSquared = desiredEdgeLength * desiredEdgeLength;
 		
 		// For every node in the graph: calculate repulsive forces
 		for(Vertex u : nodeList) {
@@ -263,24 +254,27 @@ public class GraphEmbedderLayout extends Layout {
 			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
 			
 			if(length != 0) {
-				double lengthSquared = Math.pow(length, 2);
-				impulse[0] = impulse[0] + delta[0] * desSquared / lengthSquared;
-				impulse[1] = impulse[1] + delta[1] * desSquared / lengthSquared;
+				double scale = desSquared / (length * length);
+				impulse[0] = impulse[0] + delta[0] * scale;
+				impulse[1] = impulse[1] + delta[1] * scale;
 			}
 		}
 		
+		double desSquaredScaled = desSquared * scalingFactor;
+		
 		// For every node connected to v: calculate attractive forces
 		for(Vertex u : v.neighbors) {
+			
 			double[] delta = new double[2];
 			
 			delta[0] = v.coordinates[0] - u.coordinates[0];
 			delta[1] = v.coordinates[1] - u.coordinates[1];
 			
 			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
-			double lengthSquared = Math.pow(length, 2);
+			double scale = (length * length) / desSquaredScaled;
 			
-			impulse[0] = impulse[0] - delta[0] * lengthSquared / (desSquared * scalingFactor);
-			impulse[1] = impulse[1] - delta[1] * lengthSquared / (desSquared * scalingFactor);
+			impulse[0] = impulse[0] - delta[0] * scale;
+			impulse[1] = impulse[1] - delta[1] * scale;
 		}
 		
 		return impulse;
