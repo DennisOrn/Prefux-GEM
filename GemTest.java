@@ -28,7 +28,6 @@ import prefux.action.assignment.NodeDegreeSizeAction;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
 import prefux.controls.CollapseControl;
-import prefux.controls.ZoomControl;
 import prefux.data.Graph;
 import prefux.data.Table;
 import prefux.data.expression.Predicate;
@@ -95,7 +94,7 @@ public class GemTest extends Application {
 		
 		try {
 			
-			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_NCI_small_overlapping_fma.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
@@ -195,13 +194,15 @@ public class GemTest extends Application {
 			//sr.setFillMode(ShapeRenderer.SOLID);
 			//sr.setRenderType(ShapeRenderer.RENDER_TYPE_DRAW_AND_FILL);
 			sr.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
-			//sr.setBaseSize(50);
+			sr.setBaseSize(30);
+			
+			//lr.setHorizontalPadding(50);
 			
 			EdgeRenderer er = new EdgeRenderer();
 			
 			CombinedRenderer cr = new CombinedRenderer();
-			//cr.add(sr);
-			//cr.add(lr);
+			cr.add(sr);
+			cr.add(lr);
 			
 			//rfa.setDefaultRenderer(sr);
 			
@@ -212,7 +213,7 @@ public class GemTest extends Application {
 			//rfa.add(pVisible, lr);
 			//rfa.add(pVisible, er);
 			
-			rfa.setDefaultRenderer(sr);
+			rfa.setDefaultRenderer(sr); //////////////////////
 			//rfa.setDefaultEdgeRenderer(er);
 			
 			//lr.setVerticalPadding(50);
@@ -229,13 +230,8 @@ public class GemTest extends Application {
 			layout.add(new RepaintAction());
 			
 			
-			/*****/
-			/*****/
-			
-			
-			
 			vis.putAction("layout", layout);
-
+			
 			ActionList nodeActions = new ActionList();
 			final String NODES = PrefuseLib.getGroupName(GROUP, Graph.NODES);
 			NodeDegreeSizeAction size = new NodeDegreeSizeAction(NODES);
@@ -246,7 +242,8 @@ public class GemTest extends Application {
 			
 			/*****/
 			
-			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(255, 0, 0));
+			//ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(255, 0, 0));
+			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(0, 0, 0));
 			nodeActions.add(nodeColor);
 			
 			ColorAction textColor = new ColorAction("graph.nodes", VisualItem.TEXTCOLOR, ColorLib.rgb(0, 255, 255));
@@ -344,10 +341,22 @@ public class GemTest extends Application {
 			
 			root.setOnZoom(event -> {
 				
-				//root.setScaleX(startScale * event.getTotalZoomFactor());
-				//root.setScaleY(startScale * event.getTotalZoomFactor());
+				/*Bounds bounds = root.localToScene(root.getBoundsInLocal());
+				double x = root.getWidth() / 2;
+				double y = root.getHeight() / 2;
+				javafx.geometry.Point2D center = root.sceneToLocal(x, y);
 				
-				zoom(root, event.getTotalZoomFactor());
+				System.out.println(x + ", " + y);
+				System.out.println(center);
+				System.out.println(root.getLayoutX());
+				System.out.println(root.getLayoutY());*/
+				//root.setLayoutX(center.getX());
+				//root.setLayoutY(center.getY());
+				
+				root.setScaleX(startScale * event.getTotalZoomFactor());
+				root.setScaleY(startScale * event.getTotalZoomFactor());
+				
+				//zoom(root, event.getTotalZoomFactor());
 				
 				event.consume();
 	        });

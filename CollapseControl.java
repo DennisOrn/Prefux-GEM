@@ -83,7 +83,8 @@ public class CollapseControl extends ControlAdapter {
 				
 				Node n = (Node)item;
 	    		showChildren(n);
-	    		item.setFillColor(ColorLib.rgb(76, 153, 0));
+	    		//item.setFillColor(ColorLib.rgb(76, 153, 0));
+	    		item.setFillColor(ColorLib.rgb(0, 0, 0));
 				item.setExpanded(true);
 			}
     	}
@@ -131,7 +132,8 @@ public class CollapseControl extends ControlAdapter {
 			double size = itemInfo.size;
 			double[] coordinates = itemInfo.coordinates;
 			
-			vi.setFillColor(ColorLib.rgb(76, 153, 0));
+			//vi.setFillColor(ColorLib.rgb(76, 153, 0));
+			vi.setFillColor(ColorLib.rgb(0, 0, 0));
 			vi.setX(coordinates[0]);
 			vi.setY(coordinates[1]);
 			vi.setSize(size);

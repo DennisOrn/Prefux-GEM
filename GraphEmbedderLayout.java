@@ -127,7 +127,7 @@ public class GraphEmbedderLayout extends Layout {
 			
 			nodeList.add(v);
 			
-			item.setSize(item.getSize() * 3);
+			//item.setSize(item.getSize() * 3);
 		}
 		
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
@@ -178,8 +178,8 @@ public class GraphEmbedderLayout extends Layout {
 			init();
 		}
 		
-		//while(globalTemp > desiredTemp && nrRounds < maxRounds) {
-		while(nrRounds < 20) {
+		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		//while(nrRounds < 10) {
 			
 			System.out.println("-------------------------------------");
 			System.out.println("ROUND " + (nrRounds + 1));
@@ -201,13 +201,15 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 10;
+			int n = maxRounds;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.item.setX(v.coordinates[0]);
 					v.item.setY(v.coordinates[1]);
 					if(globalTemp < desiredTemp) {
-						v.item.setFillColor(ColorLib.rgb(76, 153, 0));
+						//v.item.setFillColor(ColorLib.rgb(76, 153, 0));
+						v.item.setFillColor(ColorLib.rgb(0, 0, 0));
+						
 						/*Renderer renderer = v.item.getRenderer(); 
 						System.out.println(renderer);
 						v.item.setSize(30);*/
