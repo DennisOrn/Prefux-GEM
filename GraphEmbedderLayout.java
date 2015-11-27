@@ -38,10 +38,13 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javafx.scene.Parent;
 import prefux.action.layout.Layout;
 import prefux.data.Edge;
 import prefux.data.Graph;
 import prefux.data.Node;
+import prefux.render.CombinedRenderer;
+import prefux.render.Renderer;
 import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
 import prefux.visual.VisualItem;
@@ -55,7 +58,7 @@ public class GraphEmbedderLayout extends Layout {
 	private double globalTemp = 1024;
 	private double[] sumPos = new double[2];
 	
-	private final double maxTemp					= 1024;
+	private final double maxTemp					= 1000;
 	private final double desiredTemp				= 50;
 	private final double desiredEdgeLength			= 256;
 	private final double gravitationalConstant		= (double)1 / 16;
@@ -63,14 +66,14 @@ public class GraphEmbedderLayout extends Layout {
 	private final double oscillationOpeningAngle	= Math.PI / 4;
 	private final double rotationOpeningAngle		= Math.PI / 3;
 	private final double oscillationSensitivity		= 1.1;
-	private double rotationSensitivity;
+	private double rotationSensitivity; // will be set in init()
 	
 	private class Vertex {
 		
 		private final VisualItem item;
 		private double[] impulse = new double[2];
 		private double skew = 0;
-		private double temp = 1024;
+		private double temp = 1000;
 		
 		private double[] coordinates = new double[2];
 		private List<Vertex> neighbors = new ArrayList<>();
@@ -168,13 +171,15 @@ public class GraphEmbedderLayout extends Layout {
 	 */
 	public void run(double frac) {
 		
+		System.out.println("test");
 		long startTime = System.nanoTime();
 		
 		if(!initialized) {
 			init();
 		}
 		
-		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		//while(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		while(nrRounds < 20) {
 			
 			System.out.println("-------------------------------------");
 			System.out.println("ROUND " + (nrRounds + 1));
@@ -202,11 +207,21 @@ public class GraphEmbedderLayout extends Layout {
 					v.item.setX(v.coordinates[0]);
 					v.item.setY(v.coordinates[1]);
 					if(globalTemp < desiredTemp) {
-						v.item.setFillColor(ColorLib.rgb(0, 0, 180));
+						v.item.setFillColor(ColorLib.rgb(76, 153, 0));
+						/*Renderer renderer = v.item.getRenderer(); 
+						System.out.println(renderer);
+						v.item.setSize(30);*/
+						
+						//v.item.render(v.item.getVisualization().getDisplay(0));
 					}
+					
+					//System.out.println(v.item.isVisible());
+					//v.item.setVisible(false);
 				}
 			}
 		}
+		
+		//getVisualization().repaint();
 	}
 	
 	private double calculateScalingFactor(Vertex v) {

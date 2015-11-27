@@ -1,7 +1,11 @@
 package fx;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -12,26 +16,35 @@ import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import prefux.Constants;
 import prefux.FxDisplay;
 import prefux.Visualization;
 import prefux.action.ActionList;
 import prefux.action.RepaintAction;
+import prefux.action.assignment.ColorAction;
 import prefux.action.assignment.DataColorAction;
 import prefux.action.assignment.NodeDegreeSizeAction;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
+import prefux.controls.CollapseControl;
+import prefux.controls.ZoomControl;
 import prefux.data.Graph;
 import prefux.data.Table;
 import prefux.data.expression.Predicate;
 import prefux.data.expression.parser.ExpressionParser;
 import prefux.data.util.Point2D;
+import prefux.render.CombinedRenderer;
 import prefux.render.DefaultRendererFactory;
+import prefux.render.EdgeRenderer;
 import prefux.render.LabelRenderer;
 import prefux.render.ShapeRenderer;
+import prefux.render.StackPaneRenderer;
 import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
 import prefux.visual.VisualItem;
+import prefux.visual.expression.InGroupPredicate;
+import prefux.visual.expression.VisiblePredicate;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -63,12 +76,15 @@ public class GemTest extends Application {
     private boolean moveInProgress = false;
     private int touchPointId;
     private Point2D prevPos;
-
+    
 	@Override
 	public void start(Stage primaryStage) {
 
 		primaryStage.setTitle("GEM");
 		Pane root = new Pane();
+		root.setScaleX(0.05);
+        root.setScaleY(0.05);
+		root.setStyle("-fx-background-color: white;");
 		primaryStage.setScene(new Scene(root, WIDTH, HEIGHT));
 		root.getStyleClass().add("display");
 		primaryStage.show();
@@ -80,6 +96,7 @@ public class GemTest extends Application {
 		try {
 			
 			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_NCI_small_overlapping_fma.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
 				System.out.println(cls);
@@ -123,7 +140,7 @@ public class GemTest extends Application {
 			
 			
 			
-			graph = new Graph(nodeTable, edgeTable, false);
+			graph = new Graph(nodeTable, edgeTable, false); // TRUE?
 			
 			
 			// graph = new GraphMLReader().readGraph("data/graphml-sample.xml");
@@ -133,57 +150,120 @@ public class GemTest extends Application {
 
 			ShapeRenderer female = new ShapeRenderer();
 			female.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
-			LabelRenderer lr = new LabelRenderer("name");
+			//LabelRenderer lr = new LabelRenderer("name");
 			ShapeRenderer male = new ShapeRenderer();
 			male.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 
 			// create a new default renderer factory
 			// return our name label renderer as the default for all
 			// non-EdgeItems
 			// includes straight line edges for EdgeItems by default
-			DefaultRendererFactory rfa = new DefaultRendererFactory();
-			Predicate expMale = ExpressionParser.predicate("gender='M'");// REMOOOOOOOOOOOOOOOOOVE (?)
-			Predicate expFemale = ExpressionParser.predicate("gender='F'");
-			rfa.add(expMale, male);
-			rfa.add(expFemale, female);
+			DefaultRendererFactory rfa = new DefaultRendererFactory(); // CHANGED
+			//Predicate expMale = ExpressionParser.predicate("gender='M'");// REMOOOOOOOOOOOOOOOOOVE (?)
+			//Predicate expFemale = ExpressionParser.predicate("gender='F'");
+			//rfa.add(expMale, male);
+			//rfa.add(expFemale, female);
+			
+			/*****/
+			//Predicate visible = new VisiblePredicate();
+			//rfa.add(visible, lr);
+			
+			//Predicate pred = (Predicate)ExpressionParser.parse("childcount()==0");
+			//rfa.add(pred, lr);
+			
+			//rfa.add(new InGroupPredicate("labels"), new LabelRenderer("name"));
+			/*****/
+			
+			
+			LabelRenderer lr = new LabelRenderer("name");
+			Predicate pVisible = (Predicate)ExpressionParser.parse("VISIBLE()");
+			//rfa.add(pVisible, r);
+			//rfa.add(pVisible, new ShapeRenderer());
+			ShapeRenderer sr = new ShapeRenderer();
+			//sr.setFillMode(ShapeRenderer.SOLID);
+			//sr.setRenderType(ShapeRenderer.RENDER_TYPE_DRAW_AND_FILL);
+			sr.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
+			//sr.setBaseSize(50);
+			
+			EdgeRenderer er = new EdgeRenderer();
+			
+			CombinedRenderer cr = new CombinedRenderer();
+			//cr.add(sr);
+			//cr.add(lr);
+			
+			//rfa.setDefaultRenderer(sr);
+			
+			//rfa.add(pVisible, cr);
+			//rfa.add(pVisible, er);
+			
+			//rfa.add(pVisible, sr);
+			//rfa.add(pVisible, lr);
+			//rfa.add(pVisible, er);
+			
+			rfa.setDefaultRenderer(sr);
+			//rfa.setDefaultEdgeRenderer(er);
+			
+			//lr.setVerticalPadding(50);
+			
+			
+			
+			
 			vis.setRendererFactory(rfa);
 
-			ActionList layout = new ActionList(Activity.INFINITY,30);
+			//ActionList layout = new ActionList(Activity.INFINITY, 30);
+			ActionList layout = new ActionList(Activity.INFINITY, 0);
 			GraphEmbedderLayout algo = new GraphEmbedderLayout("graph");
 			layout.add(algo);
 			layout.add(new RepaintAction());
+			
+			
+			/*****/
+			/*****/
+			
+			
+			
 			vis.putAction("layout", layout);
 
 			ActionList nodeActions = new ActionList();
 			final String NODES = PrefuseLib.getGroupName(GROUP, Graph.NODES);
-			// DataSizeAction size = new DataSizeAction(NODES, "age");
-			// nodeActions.add(size);
 			NodeDegreeSizeAction size = new NodeDegreeSizeAction(NODES);
 			nodeActions.add(size);
-			int[] malePalette = new int[] {
-					ColorLib.rgb(150, 0, 0)
-			};
-
-			/*DataColorAction colorF = new DataColorAction(NODES, expFemale, "age",
-			        Constants.NUMERICAL, VisualItem.FILLCOLOR, femalePalette);
-			DataColorAction colorM = new DataColorAction(NODES, expMale, "age",
-			        Constants.NUMERICAL, VisualItem.FILLCOLOR, malePalette);
-			nodeActions.add(colorF);
-			nodeActions.add(colorM);*/
 			
-			DataColorAction color = new DataColorAction(NODES, "name", Constants.NOMINAL, VisualItem.FILLCOLOR, malePalette);
-			nodeActions.add(color);
+			//DataColorAction color = new DataColorAction(NODES, "name", Constants.NOMINAL, VisualItem.FILLCOLOR, palette);
+			//nodeActions.add(color);
+			
+			/*****/
+			
+			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(255, 0, 0));
+			nodeActions.add(nodeColor);
+			
+			ColorAction textColor = new ColorAction("graph.nodes", VisualItem.TEXTCOLOR, ColorLib.rgb(0, 255, 255));
+			nodeActions.add(textColor);
+			
+			/*****/
 			
 			vis.putAction("nodes", nodeActions);
 
-			FxDisplay display = new FxDisplay(vis);
-			//display.addControlListener(new DragControl());
 			
-			//display.addControlListener(new ZoomControl(display));///////////////////
+			
+			FxDisplay display = new FxDisplay(vis);
+			display.addControlListener(new CollapseControl());
 			
 			//root.setCenter(display);
 			//root.setContent(display);
-			root.getChildren().addAll(display);
+			root.getChildren().add(display);
 			
 			vis.run("nodes");
 			vis.run("layout");
@@ -191,18 +271,40 @@ public class GemTest extends Application {
 			
 			
 			/******************** TOUCH-FUNCTIONALITY ********************/
+			
+			
+			class Delta { double x, y; }
+			final Delta dragDelta = new Delta();
+			
+			
 			root.setOnScroll(event -> {
-	            double zoomFactor = 1.05;
+	            double zoomFactor = 1.1;
 	            double deltaY = event.getDeltaY();
 	            if(deltaY < 0) {
 	            	zoomFactor = 2.0 - zoomFactor;
 	            }
 	            
-	            root.setScaleX(root.getScaleX() * zoomFactor);
-	            root.setScaleY(root.getScaleY() * zoomFactor);
+	            //root.relocate(event.getSceneX(), event.getSceneY());
+	            zoom(root, zoomFactor);
 	            
 	            event.consume();
 			});
+			
+			root.setOnMouseMoved(event -> {
+				dragDelta.x = root.getLayoutX() - event.getSceneX();
+			    dragDelta.y = root.getLayoutY() - event.getSceneY();
+				event.consume();
+			});
+			
+			root.setOnMouseDragged(event -> {
+				root.setLayoutX(event.getSceneX() + dragDelta.x);
+				root.setLayoutY(event.getSceneY() + dragDelta.y);
+				event.consume();
+			});
+			
+			
+			
+			
 			
 			root.setOnTouchPressed(event -> {
 				if(moveInProgress == false) {
@@ -241,8 +343,12 @@ public class GemTest extends Application {
 	        });
 			
 			root.setOnZoom(event -> {
-				root.setScaleX(startScale * event.getTotalZoomFactor());
-				root.setScaleY(startScale * event.getTotalZoomFactor());
+				
+				//root.setScaleX(startScale * event.getTotalZoomFactor());
+				//root.setScaleY(startScale * event.getTotalZoomFactor());
+				
+				zoom(root, event.getTotalZoomFactor());
+				
 				event.consume();
 	        });
 	        
@@ -261,7 +367,8 @@ public class GemTest extends Application {
 			e.printStackTrace();
 			System.err.println("Error loading graph. Exiting...");
 			System.exit(1);
-		}*/ catch (com.hp.hpl.jena.shared.WrappedIOException e) {
+		}*/
+		catch (com.hp.hpl.jena.shared.WrappedIOException e) {
 			if (e.getCause() instanceof java.io.FileNotFoundException) {
 				System.err.println("A java.io.FileNotFoundException caught: " 
 						+ e.getCause().getMessage());
@@ -269,7 +376,53 @@ public class GemTest extends Application {
 		}
 	}
 	
-	
+	private void zoom(Node node, double factor) {
+        // determine scale
+        double oldScale = node.getScaleX();
+        double scale = oldScale * factor;
+        double f = (scale / oldScale) - 1;
+        
+        // determine offset that we will have to move the node
+        Bounds bounds = node.localToScene(node.getBoundsInLocal());
+        
+        // coordinates in the center of the screen
+        double x = node.getLayoutBounds().getWidth() / 2;
+        double y = node.getLayoutBounds().getHeight() / 2;
+        
+        double dx = (x - (bounds.getWidth() / 2 + bounds.getMinX()));
+        double dy = (y - (bounds.getHeight() / 2 + bounds.getMinY()));
+        
+        
+        /*if(dx > 1000)  dx = 1000;
+        if(dx < -1000) dx = -1000;
+        if(dy > 1000)  dy = 1000;
+        if(dy < -1000) dy = -1000;*/
+        
+        
+        node.setTranslateX(node.getTranslateX() - f * dx);
+        node.setTranslateY(node.getTranslateY() - f * dy);
+        
+        /*node.setTranslateX(node.getTranslateX() - f * (bounds.getWidth() / 2));
+        node.setTranslateY(node.getTranslateY() - f * (bounds.getHeight() / 2));*/
+        
+        
+        
+        node.setScaleX(scale);
+        node.setScaleY(scale);
+        
+        System.out.println("---------------------------------------------");
+        System.out.println("bounds width:  " + bounds.getWidth());
+        System.out.println("bounds height: " + bounds.getHeight());
+        System.out.println("bounds min x:  " + bounds.getMinX());
+        System.out.println("bounds min y:  " + bounds.getMinY());
+        
+        System.out.println("translate x:   " + node.getTranslateX());
+        System.out.println("translate y:   " + node.getTranslateY());
+        
+        System.out.println("f:             " + f);
+        System.out.println("dx:            " + dx);
+        System.out.println("dy:            " + dy);
+    }
 	
 	private void showClass(OntClass cls, List<OntClass> occurs, int depth) {
 		//renderClassDescription(cls, depth);
@@ -322,20 +475,5 @@ public class GemTest extends Application {
 		for (int i = 0; i < depth; ++i) {
 			System.out.print("  ");
 		}
-	}
-	
-	
-	
-	
-	
-	
-	private Node buildControlPanel(FxDisplay display) {
-		VBox vbox = new VBox();
-		Label txt = new Label("Zoom Factor");
-		Slider slider = new Slider(0.0, 10.0, 0.08);
-		//slider.setMaxWidth(900);
-		display.zoomFactorProperty().bind(slider.valueProperty());
-		vbox.getChildren().addAll(txt, slider);
-		return vbox;
 	}
 }
