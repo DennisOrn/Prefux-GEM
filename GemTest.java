@@ -27,7 +27,7 @@ import prefux.action.assignment.DataColorAction;
 import prefux.action.assignment.NodeDegreeSizeAction;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
-import prefux.controls.CollapseControl;
+import prefux.controls.GemControl;
 import prefux.data.Graph;
 import prefux.data.Table;
 import prefux.data.expression.Predicate;
@@ -76,6 +76,11 @@ public class GemTest extends Application {
     private int touchPointId;
     private Point2D prevPos;
     
+    private double zoomValue = 1;
+    private double zoomFactor = 1;
+    private Point2D anchor;
+    private Point2D oldAnchor;
+    
 	@Override
 	public void start(Stage primaryStage) {
 
@@ -94,6 +99,7 @@ public class GemTest extends Application {
 		
 		try {
 			
+			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
 			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_NCI_small_overlapping_fma.owl");
 			
@@ -204,7 +210,7 @@ public class GemTest extends Application {
 			cr.add(sr);
 			cr.add(lr);
 			
-			//rfa.setDefaultRenderer(sr);
+			//rfa.setDefaultRenderer(cr);
 			
 			//rfa.add(pVisible, cr);
 			//rfa.add(pVisible, er);
@@ -242,8 +248,7 @@ public class GemTest extends Application {
 			
 			/*****/
 			
-			//ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(255, 0, 0));
-			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(0, 0, 0));
+			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(75, 0, 130)); // INDIGO
 			nodeActions.add(nodeColor);
 			
 			ColorAction textColor = new ColorAction("graph.nodes", VisualItem.TEXTCOLOR, ColorLib.rgb(0, 255, 255));
@@ -256,7 +261,8 @@ public class GemTest extends Application {
 			
 			
 			FxDisplay display = new FxDisplay(vis);
-			display.addControlListener(new CollapseControl());
+			//display.addControlListener(new CollapseControl());
+			display.addControlListener(new GemControl(display));
 			
 			//root.setCenter(display);
 			//root.setContent(display);
@@ -273,29 +279,15 @@ public class GemTest extends Application {
 			class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
-			
-			root.setOnScroll(event -> {
-	            double zoomFactor = 1.1;
-	            double deltaY = event.getDeltaY();
-	            if(deltaY < 0) {
-	            	zoomFactor = 2.0 - zoomFactor;
-	            }
-	            
-	            //root.relocate(event.getSceneX(), event.getSceneY());
-	            zoom(root, zoomFactor);
-	            
-	            event.consume();
-			});
-			
 			root.setOnMouseMoved(event -> {
-				dragDelta.x = root.getLayoutX() - event.getSceneX();
-			    dragDelta.y = root.getLayoutY() - event.getSceneY();
+				dragDelta.x = display.getLayoutX() - event.getX();
+			    dragDelta.y = display.getLayoutY() - event.getY();
 				event.consume();
 			});
 			
 			root.setOnMouseDragged(event -> {
-				root.setLayoutX(event.getSceneX() + dragDelta.x);
-				root.setLayoutY(event.getSceneY() + dragDelta.y);
+				display.setLayoutX(event.getX() + dragDelta.x);
+				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
 			});
 			
@@ -304,6 +296,10 @@ public class GemTest extends Application {
 			
 			
 			root.setOnTouchPressed(event -> {
+				
+				//anchor = new Point2D(event.getTouchPoint().getX(), event.getTouchPoint().getY()); // REMOVE
+				//System.out.println("TOUCH:      " + (int)anchor.getX() + ", " + (int)anchor.getY());
+				
 				if(moveInProgress == false) {
 					moveInProgress = true;
 					touchPointId = event.getTouchPoint().getId();
@@ -340,24 +336,8 @@ public class GemTest extends Application {
 	        });
 			
 			root.setOnZoom(event -> {
-				
-				/*Bounds bounds = root.localToScene(root.getBoundsInLocal());
-				double x = root.getWidth() / 2;
-				double y = root.getHeight() / 2;
-				javafx.geometry.Point2D center = root.sceneToLocal(x, y);
-				
-				System.out.println(x + ", " + y);
-				System.out.println(center);
-				System.out.println(root.getLayoutX());
-				System.out.println(root.getLayoutY());*/
-				//root.setLayoutX(center.getX());
-				//root.setLayoutY(center.getY());
-				
 				root.setScaleX(startScale * event.getTotalZoomFactor());
 				root.setScaleY(startScale * event.getTotalZoomFactor());
-				
-				//zoom(root, event.getTotalZoomFactor());
-				
 				event.consume();
 	        });
 	        
@@ -368,8 +348,10 @@ public class GemTest extends Application {
 			
 			root.setOnRotate(event -> {
 				root.setRotate(startRotate + event.getTotalAngle());
+				//root.setRotate(startRotate + (event.getTotalAngle() / 2));
 				event.consume();
 	        });
+			
 			/******************** TOUCH-FUNCTIONALITY ********************/
 		}
 		/*catch (DataIOException e) {
@@ -384,54 +366,6 @@ public class GemTest extends Application {
 			}
 		}
 	}
-	
-	private void zoom(Node node, double factor) {
-        // determine scale
-        double oldScale = node.getScaleX();
-        double scale = oldScale * factor;
-        double f = (scale / oldScale) - 1;
-        
-        // determine offset that we will have to move the node
-        Bounds bounds = node.localToScene(node.getBoundsInLocal());
-        
-        // coordinates in the center of the screen
-        double x = node.getLayoutBounds().getWidth() / 2;
-        double y = node.getLayoutBounds().getHeight() / 2;
-        
-        double dx = (x - (bounds.getWidth() / 2 + bounds.getMinX()));
-        double dy = (y - (bounds.getHeight() / 2 + bounds.getMinY()));
-        
-        
-        /*if(dx > 1000)  dx = 1000;
-        if(dx < -1000) dx = -1000;
-        if(dy > 1000)  dy = 1000;
-        if(dy < -1000) dy = -1000;*/
-        
-        
-        node.setTranslateX(node.getTranslateX() - f * dx);
-        node.setTranslateY(node.getTranslateY() - f * dy);
-        
-        /*node.setTranslateX(node.getTranslateX() - f * (bounds.getWidth() / 2));
-        node.setTranslateY(node.getTranslateY() - f * (bounds.getHeight() / 2));*/
-        
-        
-        
-        node.setScaleX(scale);
-        node.setScaleY(scale);
-        
-        System.out.println("---------------------------------------------");
-        System.out.println("bounds width:  " + bounds.getWidth());
-        System.out.println("bounds height: " + bounds.getHeight());
-        System.out.println("bounds min x:  " + bounds.getMinX());
-        System.out.println("bounds min y:  " + bounds.getMinY());
-        
-        System.out.println("translate x:   " + node.getTranslateX());
-        System.out.println("translate y:   " + node.getTranslateY());
-        
-        System.out.println("f:             " + f);
-        System.out.println("dx:            " + dx);
-        System.out.println("dy:            " + dy);
-    }
 	
 	private void showClass(OntClass cls, List<OntClass> occurs, int depth) {
 		//renderClassDescription(cls, depth);
@@ -451,38 +385,6 @@ public class GemTest extends Application {
 				showClass(sub, occurs, depth + 1);
 				occurs.remove(cls);
 			}
-		}
-	}
-	
-	private void renderClassDescription(OntClass c, int depth) {
-		indent(depth);
-		
-		if (!c.isRestriction() && !c.isAnon()) {
-			System.out.println("classname : " + c.getLocalName());
-			
-			/********************************************************************************/
-			/*int index = nodeTable.addRow();
-			nodeTable.set(index, 0, c.getLocalName());*/
-			/********************************************************************************/
-			
-			// list the instances for this class
-			showInstance(c, depth + 2);
-		}
-	}
-	
-	private void showInstance(OntClass cls, int depth) {
-		
-		for(ExtendedIterator<? extends OntResource> iter = cls.listInstances(true); iter.hasNext();){
-			indent(depth);
-			OntResource instance = iter.next();
-			System.out.println("instance : " + instance.getLocalName());
-		}
-		
-	}
-	
-	private void indent(int depth) {
-		for (int i = 0; i < depth; ++i) {
-			System.out.print("  ");
 		}
 	}
 }
