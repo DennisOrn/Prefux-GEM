@@ -27,6 +27,7 @@ import prefux.action.assignment.DataColorAction;
 import prefux.action.assignment.NodeDegreeSizeAction;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
+import prefux.controls.DragControl;
 import prefux.controls.GemControl;
 import prefux.data.Graph;
 import prefux.data.Table;
@@ -99,8 +100,8 @@ public class GemTest extends Application {
 		
 		try {
 			
-			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_NCI_small_overlapping_fma.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
@@ -248,7 +249,7 @@ public class GemTest extends Application {
 			
 			/*****/
 			
-			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(75, 0, 130)); // INDIGO
+			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(72, 61, 139));
 			nodeActions.add(nodeColor);
 			
 			ColorAction textColor = new ColorAction("graph.nodes", VisualItem.TEXTCOLOR, ColorLib.rgb(0, 255, 255));
@@ -261,11 +262,9 @@ public class GemTest extends Application {
 			
 			
 			FxDisplay display = new FxDisplay(vis);
-			//display.addControlListener(new CollapseControl());
-			display.addControlListener(new GemControl(display));
+			display.addControlListener(new GemControl(display)); // display-argument unnecessary???
+			//display.addControlListener(new DragControl());
 			
-			//root.setCenter(display);
-			//root.setContent(display);
 			root.getChildren().add(display);
 			
 			vis.run("nodes");
@@ -275,8 +274,8 @@ public class GemTest extends Application {
 			
 			/******************** TOUCH-FUNCTIONALITY ********************/
 			
-			
-			class Delta { double x, y; }
+			/* Mouse */
+			/*class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
 			root.setOnMouseMoved(event -> {
@@ -289,35 +288,31 @@ public class GemTest extends Application {
 				display.setLayoutX(event.getX() + dragDelta.x);
 				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
-			});
-			
+			});*/
+			/* Mouse */
 			
 			
 			
 			
 			root.setOnTouchPressed(event -> {
-				
-				//anchor = new Point2D(event.getTouchPoint().getX(), event.getTouchPoint().getY()); // REMOVE
-				//System.out.println("TOUCH:      " + (int)anchor.getX() + ", " + (int)anchor.getY());
-				
 				if(moveInProgress == false) {
 					moveInProgress = true;
 					touchPointId = event.getTouchPoint().getId();
-					prevPos = new Point2D(event.getTouchPoint().getSceneX(), event.getTouchPoint().getSceneY());
+					prevPos = new Point2D(event.getTouchPoint().getX(), event.getTouchPoint().getY());
 				}
 				event.consume();
 	        });
 			
 			root.setOnTouchMoved(event -> {
 				if(moveInProgress == true && event.getTouchPoint().getId() == touchPointId) {
-					Point2D currPos = new Point2D(event.getTouchPoint().getSceneX(), event.getTouchPoint().getSceneY());
+					Point2D currPos = new Point2D(event.getTouchPoint().getX(), event.getTouchPoint().getY());
 					double[] translationVector = new double[2];
 					
 					translationVector[0] = currPos.getX() - prevPos.getX();
 					translationVector[1] = currPos.getY() - prevPos.getY();
 					
-					root.setTranslateX(root.getTranslateX() + translationVector[0]);
-					root.setTranslateY(root.getTranslateY() + translationVector[1]);
+					display.setTranslateX(display.getTranslateX() + translationVector[0]);
+					display.setTranslateY(display.getTranslateY() + translationVector[1]);
 					prevPos = currPos;
 				}
 				event.consume();
@@ -348,7 +343,6 @@ public class GemTest extends Application {
 			
 			root.setOnRotate(event -> {
 				root.setRotate(startRotate + event.getTotalAngle());
-				//root.setRotate(startRotate + (event.getTotalAngle() / 2));
 				event.consume();
 	        });
 			

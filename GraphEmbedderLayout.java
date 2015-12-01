@@ -59,7 +59,7 @@ public class GraphEmbedderLayout extends Layout {
 	private double[] sumPos = new double[2];
 	
 	private final double maxTemp					= 1000;
-	private final double desiredTemp				= 50;
+	private final double desiredTemp				= 30;
 	private final double desiredEdgeLength			= 256;
 	private final double gravitationalConstant		= (double)1 / 16;
 	
@@ -117,6 +117,8 @@ public class GraphEmbedderLayout extends Layout {
 			
 			item.setX(newX);
 			item.setY(newY);
+			
+			item.setFixed(false);
 			
 			sumPos[0] += newX;
 			sumPos[1] += newY;
@@ -178,8 +180,8 @@ public class GraphEmbedderLayout extends Layout {
 			init();
 		}
 		
-		//while(globalTemp > desiredTemp && nrRounds < maxRounds) {
-		while(nrRounds < 10) {
+		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		//while(nrRounds < 30) {
 			
 			System.out.println("-------------------------------------");
 			System.out.println("ROUND " + (nrRounds + 1));
@@ -201,12 +203,16 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 10;
+			int n = 20;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.item.setX(v.coordinates[0]);
 					v.item.setY(v.coordinates[1]);
+					
 					if(globalTemp < desiredTemp) {
+						
+						v.item.setFixed(true);
+						
 						//v.item.setFillColor(ColorLib.rgb(0, 0, 0));
 						
 						/*Renderer renderer = v.item.getRenderer(); 
