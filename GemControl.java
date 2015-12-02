@@ -1,5 +1,6 @@
 package prefux.controls;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -48,12 +49,10 @@ public class GemControl extends ControlAdapter {
     HashMap<VisualItem, ItemInfo> map = new HashMap<>();
     private VisualItem currentItem;
     
-    private FxDisplay display;
-    private double zoomValue = 1;
-    private Point2D anchor;
-    
     long startTime = 0;
     VisualItem selectedItem;
+    List<VisualItem> selectedItems = new ArrayList<>();
+    boolean selected;
     
     private Delta delta = new Delta();
     
@@ -62,45 +61,62 @@ public class GemControl extends ControlAdapter {
      */
     public GemControl() {}
     
-    public GemControl(FxDisplay display) {
+    /*public GemControl(FxDisplay display) {
     	this.display = display;
-    }
+    }*/
     
 	@Override
 	public void itemEvent(VisualItem item, Event e)
 	{
 		if(item.isFixed()) { // If the algorithm has finished.
 			
-			
-			
 			if(e.getEventType() == TouchEvent.TOUCH_PRESSED && item instanceof NodeItem) {
 				startTime = System.nanoTime();
+				selected = item.isHighlighted() ? true : false;
 			}
 			
 			else if(e.getEventType() == TouchEvent.TOUCH_STATIONARY && item instanceof NodeItem) {
 				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
-				if(selectedItem != item && elapsedTime > 500) {
-					if(!item.isHighlighted()) {
-						if(selectedItem != null) { // If a node is already selected: deselect it.
+				if(elapsedTime > 500 && selectedItem != item ) {
+					selectedItem = item;
+					if(!selected) { // Select the item
+						
+						/*if(selectedItem != null) { // If a node is already selected: deselect it.
 							selectedItem.setHighlighted(false);
 							selectedItem.setFillColor(NORMAL_COLOR);
-						}
-						selectedItem = item;
-						item.setHighlighted(true);
-						item.setFillColor(item.isExpanded() ? SELECTED_COLOR : COLLAPSED_COLOR);
+						}*/
 						
-						System.out.println("SELECTED: " + selectedItem);
+						selectedItems.add(item);
+						item.setHighlighted(true);
+						item.setFillColor(SELECTED_COLOR);
+					} else { // Deselect the item
+						selectedItems.remove(item);
+						item.setHighlighted(false);
+						item.setFillColor(NORMAL_COLOR);
 					}
 				}
 			}
 			
 			else if(e.getEventType() == TouchEvent.TOUCH_MOVED && item instanceof NodeItem) {
 				if(selectedItem == item && item.isExpanded()) {
+					
 					TouchEvent ev = (TouchEvent)e;
 					TouchPoint point = ev.getTouchPoint();
 					
+					double deltaX = point.getX() - item.getX();
+					double deltaY = point.getY() - item.getY();
+					
+					// Move the item
 					item.setX(point.getX());
 					item.setY(point.getY());
+					
+					// Move the other selected items in the same direction
+					for(VisualItem vi : selectedItems) {
+						if(vi != item) {
+							vi.setX(deltaX);
+							vi.setY(deltaY);
+						}
+					}
 				}
 			}
 			
@@ -133,7 +149,7 @@ public class GemControl extends ControlAdapter {
 						Node n = (Node)item;
 			    		showChildren(n);
 			    		
-			    		item.setFillColor(item == selectedItem ? SELECTED_COLOR : NORMAL_COLOR);
+			    		item.setFillColor((item == selectedItem) ? SELECTED_COLOR : NORMAL_COLOR);
 						item.setExpanded(true);
 					}
 				}
@@ -184,7 +200,7 @@ public class GemControl extends ControlAdapter {
 			double size = itemInfo.size;
 			double[] coordinates = itemInfo.coordinates;
 			
-			vi.setFillColor(vi == selectedItem ? SELECTED_COLOR : NORMAL_COLOR);
+			vi.setFillColor((vi == selectedItem) ? SELECTED_COLOR : NORMAL_COLOR);
 			vi.setX(coordinates[0]);
 			vi.setY(coordinates[1]);
 			vi.setSize(size);
