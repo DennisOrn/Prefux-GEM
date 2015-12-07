@@ -4,8 +4,10 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -14,7 +16,11 @@ import javafx.scene.input.RotateEvent;
 import javafx.scene.input.TouchEvent;
 import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import prefux.Constants;
@@ -25,24 +31,32 @@ import prefux.action.RepaintAction;
 import prefux.action.assignment.ColorAction;
 import prefux.action.assignment.DataColorAction;
 import prefux.action.assignment.NodeDegreeSizeAction;
+import prefux.action.layout.Layout;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
 import prefux.controls.DragControl;
 import prefux.controls.GemControl;
 import prefux.data.Graph;
+import prefux.data.Schema;
 import prefux.data.Table;
+import prefux.data.Tuple;
 import prefux.data.expression.Predicate;
 import prefux.data.expression.parser.ExpressionParser;
 import prefux.data.util.Point2D;
+import prefux.data.util.Rectangle2D;
 import prefux.render.CombinedRenderer;
 import prefux.render.DefaultRendererFactory;
 import prefux.render.EdgeRenderer;
 import prefux.render.LabelRenderer;
+import prefux.render.NullRenderer;
 import prefux.render.ShapeRenderer;
 import prefux.render.StackPaneRenderer;
 import prefux.util.ColorLib;
+import prefux.util.FontLib;
 import prefux.util.PrefuseLib;
+import prefux.visual.DecoratorItem;
 import prefux.visual.VisualItem;
+import prefux.visual.VisualTupleSet;
 import prefux.visual.expression.InGroupPredicate;
 import prefux.visual.expression.VisiblePredicate;
 
@@ -72,6 +86,9 @@ public class GemTest extends Application {
 	List<OntClass> ontList = new ArrayList<>();
 	//double lastX, lastY;
 	
+	private VisualTupleSet visualTupleSet;
+	private List<Label> labels = new ArrayList<>();
+	
 	private double startScale, startRotate;
     private boolean moveInProgress = false;
     private int touchPointId;
@@ -87,8 +104,12 @@ public class GemTest extends Application {
 
 		primaryStage.setTitle("GEM");
 		Pane root = new Pane();
-		root.setScaleX(0.05);
-        root.setScaleY(0.05);
+		
+		//root.setScaleX(0.05);
+        //root.setScaleY(0.05);
+		root.setScaleX(0.25);
+        root.setScaleY(0.25);
+		
 		root.setStyle("-fx-background-color: white;");
 		primaryStage.setScene(new Scene(root, WIDTH, HEIGHT));
 		root.getStyleClass().add("display");
@@ -100,9 +121,9 @@ public class GemTest extends Application {
 		
 		try {
 			
-			m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_NCI_small_overlapping_fma.owl");
+			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
 				System.out.println(cls);
@@ -138,6 +159,7 @@ public class GemTest extends Application {
 					edgeTable.set(index, 1, ontList.indexOf(sub));
 				}
 			}
+			
 			
 			System.out.println("DONE");
 			System.out.println("ontList.size(): " + ontList.size());
@@ -176,7 +198,7 @@ public class GemTest extends Application {
 			// return our name label renderer as the default for all
 			// non-EdgeItems
 			// includes straight line edges for EdgeItems by default
-			DefaultRendererFactory rfa = new DefaultRendererFactory(); // CHANGED
+			DefaultRendererFactory rfa = new DefaultRendererFactory();
 			//Predicate expMale = ExpressionParser.predicate("gender='M'");// REMOOOOOOOOOOOOOOOOOVE (?)
 			//Predicate expFemale = ExpressionParser.predicate("gender='F'");
 			//rfa.add(expMale, male);
@@ -194,7 +216,9 @@ public class GemTest extends Application {
 			
 			
 			LabelRenderer lr = new LabelRenderer("name");
-			Predicate pVisible = (Predicate)ExpressionParser.parse("VISIBLE()");
+			Predicate pVisible		= (Predicate)ExpressionParser.parse("VISIBLE()");
+			Predicate pNotVisible	= (Predicate)ExpressionParser.parse("!VISIBLE()");
+			
 			//rfa.add(pVisible, r);
 			//rfa.add(pVisible, new ShapeRenderer());
 			ShapeRenderer sr = new ShapeRenderer();
@@ -206,36 +230,47 @@ public class GemTest extends Application {
 			//lr.setHorizontalPadding(50);
 			
 			EdgeRenderer er = new EdgeRenderer();
-			
 			CombinedRenderer cr = new CombinedRenderer();
+			NullRenderer nr = new NullRenderer();
 			cr.add(sr);
 			cr.add(lr);
-			
-			//rfa.setDefaultRenderer(cr);
 			
 			//rfa.add(pVisible, cr);
 			//rfa.add(pVisible, er);
 			
-			//rfa.add(pVisible, sr);
-			//rfa.add(pVisible, lr);
-			//rfa.add(pVisible, er);
 			
-			rfa.setDefaultRenderer(sr); //////////////////////
+			//rfa.add(pVisible, sr);
+			//rfa.add(pVisible, er);
+			//vis.setVisible("graph.nodes", null, false);
+			//vis.setVisible("graph.edges", null, false);
+			
+			//vis.addDecorators("labels", "graph.nodes", pVisible, LABEL_SCHEMA);
+			
+			//rfa.add(pVisible, er);
+			rfa.setDefaultRenderer(cr);
 			//rfa.setDefaultEdgeRenderer(er);
 			
-			//lr.setVerticalPadding(50);
+			//rfa.add(new InGroupPredicate("NODE_DECORATORS"), lr);
 			
-			
-			
-			
+			//vis.setRendererFactory(rfa);
 			vis.setRendererFactory(rfa);
+			
+			//DECORATOR_SCHEMA.setDefault(VisualItem.TEXTCOLOR, ColorLib.gray(128));
+	        //vis.addDecorators("NODE_DECORATORS", "graph.nodes", DECORATOR_SCHEMA);
+			
 
 			//ActionList layout = new ActionList(Activity.INFINITY, 30);
 			ActionList layout = new ActionList(Activity.INFINITY, 0);
 			GraphEmbedderLayout algo = new GraphEmbedderLayout("graph");
 			layout.add(algo);
-			layout.add(new RepaintAction());
 			
+			/*****/
+			
+			//layout.add(new LabelLayout2("NODE_DECORATORS"));
+			
+			/*****/
+			
+			layout.add(new RepaintAction());
 			
 			vis.putAction("layout", layout);
 			
@@ -262,10 +297,14 @@ public class GemTest extends Application {
 			
 			
 			FxDisplay display = new FxDisplay(vis);
-			display.addControlListener(new GemControl(display)); // display-argument unnecessary???
-			//display.addControlListener(new DragControl());
+			display.addControlListener(new GemControl());
 			
 			root.getChildren().add(display);
+			
+			
+			visualTupleSet = vis.getVisualGroup("graph");
+			initializeNodes();
+			
 			
 			vis.run("nodes");
 			vis.run("layout");
@@ -378,6 +417,59 @@ public class GemTest extends Application {
 				occurs.add(cls);
 				showClass(sub, occurs, depth + 1);
 				occurs.remove(cls);
+			}
+		}
+	}
+	
+	private void initializeNodes() {
+		
+		Iterator<? extends Tuple> iterator = visualTupleSet.tuples();
+		while(iterator.hasNext()) {
+			
+			VisualItem item = (VisualItem) iterator.next();
+			System.out.println(item.getNode());
+			if(item.getNode() instanceof Group) {
+				
+				Group group = (Group) item.getNode();
+				ObservableList<javafx.scene.Node> groupList = group.getChildren();
+				for(javafx.scene.Node groupChild : groupList) {
+					
+					System.out.print("    ");
+					System.out.println(groupChild);
+					if(groupChild instanceof Circle) {
+						
+						Circle circle = (Circle) groupChild;
+						circle.setFill(javafx.scene.paint.Color.LIGHTSEAGREEN);
+						circle.setStroke(javafx.scene.paint.Color.BLACK);
+						circle.setStrokeWidth(3);
+						//circle.setVisible(false);
+						//circle.setRadius(80);
+						
+					} else if(groupChild instanceof StackPane) {
+						
+						StackPane stack = (StackPane) groupChild;
+						ObservableList<javafx.scene.Node> stackList = stack.getChildren();
+						for(javafx.scene.Node stackChild : stackList) {
+							
+							System.out.print("        ");
+							System.out.println(stackChild);
+							if(stackChild instanceof Label) {
+								
+								Label label = (Label) stackChild;
+								label.setFont(new Font(120));
+								if(((prefux.data.Node) item).getDegree() < 10) {
+									
+									label.setVisible(false);
+									// TODO: COLLAPSE AND HIDE CHILDREN AS WELL?
+								}
+								
+								labels.add(label);
+							}
+						}
+					}
+				}
+			} else if(item.getNode() instanceof Line) {
+				// TODO: do something with the lines?
 			}
 		}
 	}

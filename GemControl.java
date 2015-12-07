@@ -7,9 +7,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import javafx.animation.PauseTransition;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseDragEvent;
@@ -17,6 +19,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TouchEvent;
 import javafx.scene.input.TouchPoint;
 import javafx.scene.input.ZoomEvent;
+import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
 import prefux.Display;
@@ -167,8 +170,9 @@ public class GemControl extends ControlAdapter {
 			hideChildren(child);
 			
 			VisualItem vi = (VisualItem)child;
+			setVisible(vi.getNode(), false);
 			
-			if(!map.containsKey(vi)) {
+			/*if(!map.containsKey(vi)) {
 				double[] coordinates = new double[2];
 				coordinates[0] = vi.getX();
 				coordinates[1] = vi.getY();
@@ -182,7 +186,7 @@ public class GemControl extends ControlAdapter {
 			vi.setY(currentItem.getY());
 			
 			vi.setExpanded(false);
-			vi.setVisible(false);
+			vi.setVisible(false);*/
 			
 		}
     }
@@ -195,7 +199,9 @@ public class GemControl extends ControlAdapter {
 			showChildren(child);
 			
 			VisualItem vi = (VisualItem)child;
-			ItemInfo itemInfo = map.get(vi);
+			setVisible(vi.getNode(), true);
+			
+			/*ItemInfo itemInfo = map.get(vi);
 			
 			double size = itemInfo.size;
 			double[] coordinates = itemInfo.coordinates;
@@ -206,7 +212,20 @@ public class GemControl extends ControlAdapter {
 			vi.setSize(size);
 			
 			vi.setExpanded(true);
-			vi.setVisible(true);
+			vi.setVisible(true);*/
 		}
+    }
+    
+    private void setVisible(javafx.scene.Node node, boolean visible) {
+    	if(node instanceof Group) {
+    		Group group = (Group) node;
+			ObservableList<javafx.scene.Node> groupList = group.getChildren();
+			for(javafx.scene.Node groupChild : groupList) {
+				if(groupChild instanceof Circle) {
+					Circle circle = (Circle) groupChild;
+					circle.setVisible(visible);
+				}
+			}
+    	}
     }
 }
