@@ -88,6 +88,8 @@ public class GemTest extends Application {
 	
 	private VisualTupleSet visualTupleSet;
 	private List<Label> labels = new ArrayList<>();
+	private double labelSize = 20;
+	private double labelSizeAdjusted;
 	
 	private double startScale, startRotate;
     private boolean moveInProgress = false;
@@ -105,10 +107,14 @@ public class GemTest extends Application {
 		primaryStage.setTitle("GEM");
 		Pane root = new Pane();
 		
-		//root.setScaleX(0.05);
-        //root.setScaleY(0.05);
-		root.setScaleX(0.25);
-        root.setScaleY(0.25);
+		root.setScaleX(0.05);
+        root.setScaleY(0.05);
+		//root.setScaleX(0.25);
+        //root.setScaleY(0.25);
+        
+        /*****/
+        labelSizeAdjusted = labelSize / root.getScaleX();
+        /*****/
 		
 		root.setStyle("-fx-background-color: white;");
 		primaryStage.setScene(new Scene(root, WIDTH, HEIGHT));
@@ -122,8 +128,8 @@ public class GemTest extends Application {
 		try {
 			
 			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
 				System.out.println(cls);
@@ -330,9 +336,6 @@ public class GemTest extends Application {
 			});*/
 			/* Mouse */
 			
-			
-			
-			
 			root.setOnTouchPressed(event -> {
 				if(moveInProgress == false) {
 					moveInProgress = true;
@@ -374,6 +377,15 @@ public class GemTest extends Application {
 				root.setScaleY(startScale * event.getTotalZoomFactor());
 				event.consume();
 	        });
+			
+			root.setOnZoomFinished(event -> {
+				// TODO: if zoom factor is [SOMETHING]: show more labels?
+				labelSizeAdjusted = labelSize / root.getScaleX();
+				for(Label label : labels) {
+					label.setFont(new Font(labelSizeAdjusted));
+				}
+				event.consume();
+	        });
 	        
 			root.setOnRotationStarted(event -> {
 				startRotate = root.getRotate();
@@ -382,6 +394,25 @@ public class GemTest extends Application {
 			
 			root.setOnRotate(event -> {
 				root.setRotate(startRotate + event.getTotalAngle());
+				
+				/*
+					Rotating labels in real-time.
+					Move loop to root.setOnRotationFinished() to rotate
+					labels only when graph-rotation is finished.
+				*/
+				/*for(Label label : labels) {
+					label.setRotate(0 - root.getRotate());
+				}*/
+				
+				event.consume();
+	        });
+			
+			root.setOnRotationFinished(event -> {
+				// TODO: only rotate visible labels?
+				for(Label label : labels) {
+					label.setRotate(0 - root.getRotate());
+				}
+				// TODO: rotation offsets the label, NOT GOOD!
 				event.consume();
 	        });
 			
@@ -444,6 +475,7 @@ public class GemTest extends Application {
 						circle.setStrokeWidth(3);
 						//circle.setVisible(false);
 						//circle.setRadius(80);
+						// TODO: set the size of the nodes according to the degree.
 						
 					} else if(groupChild instanceof StackPane) {
 						
@@ -456,10 +488,12 @@ public class GemTest extends Application {
 							if(stackChild instanceof Label) {
 								
 								Label label = (Label) stackChild;
-								label.setFont(new Font(120));
+								label.setFont(new Font(labelSizeAdjusted));
 								if(((prefux.data.Node) item).getDegree() < 10) {
 									
-									label.setVisible(false);
+									//label.setVisible(false);
+									label.setManaged(false);
+									//label.setFont(new Font(0));
 									// TODO: COLLAPSE AND HIDE CHILDREN AS WELL?
 								}
 								
