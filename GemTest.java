@@ -299,18 +299,14 @@ public class GemTest extends Application {
 			/*****/
 			
 			vis.putAction("nodes", nodeActions);
-
-			
 			
 			FxDisplay display = new FxDisplay(vis);
+			
 			display.addControlListener(new GemControl());
 			
+			initializeNodes(vis.getVisualGroup("graph"));
+			
 			root.getChildren().add(display);
-			
-			
-			visualTupleSet = vis.getVisualGroup("graph");
-			initializeNodes();
-			
 			
 			vis.run("nodes");
 			vis.run("layout");
@@ -412,7 +408,7 @@ public class GemTest extends Application {
 				for(Label label : labels) {
 					label.setRotate(0 - root.getRotate());
 				}
-				// TODO: rotation offsets the label, NOT GOOD!
+				// TODO: rotation offsets the label, NOT GOOD! It rotates around the center of the label (?)
 				event.consume();
 	        });
 			
@@ -452,7 +448,7 @@ public class GemTest extends Application {
 		}
 	}
 	
-	private void initializeNodes() {
+	private void initializeNodes(VisualTupleSet visualTupleSet) {
 		
 		Iterator<? extends Tuple> iterator = visualTupleSet.tuples();
 		while(iterator.hasNext()) {
