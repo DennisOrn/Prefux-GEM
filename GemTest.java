@@ -44,6 +44,7 @@ import prefux.data.expression.Predicate;
 import prefux.data.expression.parser.ExpressionParser;
 import prefux.data.util.Point2D;
 import prefux.data.util.Rectangle2D;
+import prefux.render.ArrowRenderer;
 import prefux.render.CombinedRenderer;
 import prefux.render.DefaultRendererFactory;
 import prefux.render.EdgeRenderer;
@@ -88,7 +89,7 @@ public class GemTest extends Application {
 	
 	private VisualTupleSet visualTupleSet;
 	private List<Label> labels = new ArrayList<>();
-	private double labelSize = 20;
+	private double labelSize = 16;
 	private double labelSizeAdjusted;
 	
 	private double startScale, startRotate;
@@ -222,6 +223,8 @@ public class GemTest extends Application {
 			
 			
 			LabelRenderer lr = new LabelRenderer("name");
+			//lr.setHorizontalAlignment(Constants.LEFT);
+			
 			Predicate pVisible		= (Predicate)ExpressionParser.parse("VISIBLE()");
 			Predicate pNotVisible	= (Predicate)ExpressionParser.parse("!VISIBLE()");
 			
@@ -255,6 +258,9 @@ public class GemTest extends Application {
 			//rfa.add(pVisible, er);
 			rfa.setDefaultRenderer(cr);
 			//rfa.setDefaultEdgeRenderer(er);
+			ArrowRenderer arrowRenderer = new ArrowRenderer();
+			//rfa.setDefaultEdgeRenderer(arrowRenderer);
+			rfa.setDefaultEdgeRenderer(er);
 			
 			//rfa.add(new InGroupPredicate("NODE_DECORATORS"), lr);
 			

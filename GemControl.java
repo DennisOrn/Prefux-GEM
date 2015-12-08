@@ -19,6 +19,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TouchEvent;
 import javafx.scene.input.TouchPoint;
 import javafx.scene.input.ZoomEvent;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
@@ -35,9 +37,13 @@ import prefux.visual.VisualItem;
 
 public class GemControl extends ControlAdapter {
 	
-	private static int NORMAL_COLOR		= ColorLib.rgb(72, 61, 139);	// DARK SLATE BLUE
+	/*private static int NORMAL_COLOR		= ColorLib.rgb(72, 61, 139);	// DARK SLATE BLUE
 	private static int SELECTED_COLOR	= ColorLib.rgb(0, 191, 255);	// BLUE
-	private static int COLLAPSED_COLOR	= ColorLib.rgb(255, 165, 0);	// ORANGE
+	private static int COLLAPSED_COLOR	= ColorLib.rgb(255, 165, 0);	// ORANGE*/
+	
+	public static Paint NORMAL_COLOR		= Color.DARKSLATEBLUE;
+	public static Paint SELECTED_COLOR		= Color.BLUE;
+	public static Paint COLLAPSED_COLOR		= Color.ORANGE;
     
     private class ItemInfo {
     	private double size;
@@ -91,11 +97,25 @@ public class GemControl extends ControlAdapter {
 						
 						selectedItems.add(item);
 						item.setHighlighted(true);
-						item.setFillColor(SELECTED_COLOR);
+						
+						//item.setFillColor(SELECTED_COLOR); // OLD
+						
+						Circle circle = getCircle(item);
+						if(circle != null) {
+							circle.setFill(SELECTED_COLOR);
+						}
+						
 					} else { // Deselect the item
+						
 						selectedItems.remove(item);
 						item.setHighlighted(false);
-						item.setFillColor(NORMAL_COLOR);
+						
+						//item.setFillColor(NORMAL_COLOR); // OLD
+						
+						Circle circle = getCircle(item);
+						if(circle != null) {
+							circle.setFill(NORMAL_COLOR);
+						}
 					}
 				}
 			}
@@ -103,7 +123,7 @@ public class GemControl extends ControlAdapter {
 			else if(e.getEventType() == TouchEvent.TOUCH_MOVED && item instanceof NodeItem) {
 				if(selectedItem == item && item.isExpanded()) {
 					
-					TouchEvent ev = (TouchEvent)e;
+					TouchEvent ev = (TouchEvent) e;
 					TouchPoint point = ev.getTouchPoint();
 					
 					double deltaX = point.getX() - item.getX();
@@ -129,8 +149,6 @@ public class GemControl extends ControlAdapter {
 					
 					if(item.isExpanded()) { // Collapse
 						
-						// item.setVisible(); does not work, would have been a lot more simple if it did.
-						
 						currentItem = item;
 						if(!map.containsKey(item)) {
 							double[] coordinates = new double[2];
@@ -141,18 +159,30 @@ public class GemControl extends ControlAdapter {
 							map.put(item, itemInfo);
 						}
 						
-						Node n = (Node)item;
+						Node n = (Node) item;
 						hideChildren(n);
 						
-						item.setFillColor(COLLAPSED_COLOR);
+						//item.setFillColor(COLLAPSED_COLOR);
+						
+						Circle circle = getCircle(item);
+						if(circle != null) {
+							circle.setFill(COLLAPSED_COLOR);
+						}
+						
 						item.setExpanded(false);
 						
 					} else { // Expand
 						
-						Node n = (Node)item;
+						Node n = (Node) item;
 			    		showChildren(n);
 			    		
-			    		item.setFillColor((item == selectedItem) ? SELECTED_COLOR : NORMAL_COLOR);
+			    		//item.setFillColor((item == selectedItem) ? SELECTED_COLOR : NORMAL_COLOR);
+			    		
+			    		Circle circle = getCircle(item);
+			    		if(circle != null) {
+			    			circle.setFill((item == selectedItem) ? SELECTED_COLOR : NORMAL_COLOR);
+			    		}
+			    		
 						item.setExpanded(true);
 					}
 				}
@@ -169,8 +199,10 @@ public class GemControl extends ControlAdapter {
 			Node child = it.next();
 			hideChildren(child);
 			
-			VisualItem vi = (VisualItem)child;
-			setVisible(vi.getNode(), false);
+			VisualItem item = (VisualItem) child;
+			//setVisible(item, false);
+			Circle circle = getCircle(item);
+			circle.setManaged(false);
 			
 			/*if(!map.containsKey(vi)) {
 				double[] coordinates = new double[2];
@@ -198,8 +230,10 @@ public class GemControl extends ControlAdapter {
 			Node child = it.next();
 			showChildren(child);
 			
-			VisualItem vi = (VisualItem)child;
-			setVisible(vi.getNode(), true);
+			VisualItem item = (VisualItem) child;
+			//setVisible(item, true);
+			Circle circle = getCircle(item);
+			circle.setManaged(true);
 			
 			/*ItemInfo itemInfo = map.get(vi);
 			
@@ -216,9 +250,24 @@ public class GemControl extends ControlAdapter {
 		}
     }
     
-    private void setVisible(javafx.scene.Node node, boolean visible) {
-    	if(node instanceof Group) {
-    		Group group = (Group) node;
+    /*private void setColor(VisualItem item, Paint paint) {
+    	if(item.getNode() instanceof Group) {
+			Group group = (Group) item.getNode();
+			ObservableList<javafx.scene.Node> groupList = group.getChildren();
+			for(javafx.scene.Node groupChild : groupList) {
+				if(groupChild instanceof Circle) {
+					Circle circle = (Circle) groupChild;
+					circle.setFill(paint);
+				}
+			}
+		}
+    }
+    
+    // TODO: very similar methods
+    
+    private void setVisible(VisualItem item, boolean visible) {
+    	if(item.getNode() instanceof Group) {
+    		Group group = (Group) item.getNode();
 			ObservableList<javafx.scene.Node> groupList = group.getChildren();
 			for(javafx.scene.Node groupChild : groupList) {
 				if(groupChild instanceof Circle) {
@@ -227,5 +276,23 @@ public class GemControl extends ControlAdapter {
 				}
 			}
     	}
+    }*/
+    
+    private Circle getCircle(VisualItem item) {
+    	
+    	Circle circle = null;
+    	
+    	if(item.getNode() instanceof Group) {
+    		Group group = (Group) item.getNode();
+			ObservableList<javafx.scene.Node> groupList = group.getChildren();
+			for(javafx.scene.Node groupChild : groupList) {
+				if(groupChild instanceof Circle) {
+					circle = (Circle) groupChild;
+					break;
+				}
+			}
+    	}
+    	
+    	return circle;
     }
 }

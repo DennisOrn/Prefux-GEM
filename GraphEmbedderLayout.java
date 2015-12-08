@@ -69,7 +69,7 @@ public class GraphEmbedderLayout extends Layout {
 	private double[] sumPos = new double[2];
 	
 	private final double maxTemp					= 1000;
-	private final double desiredTemp				= 900;
+	private final double desiredTemp				= 500;
 	private final double desiredEdgeLength			= 256;
 	private final double gravitationalConstant		= (double)1 / 16;
 	
@@ -213,7 +213,7 @@ public class GraphEmbedderLayout extends Layout {
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the graph every n rounds
-			int n = 10;
+			int n = 20;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.item.setX(v.coordinates[0]);
@@ -223,7 +223,7 @@ public class GraphEmbedderLayout extends Layout {
 						
 						v.item.setFixed(true);
 						
-						v.item.setVisible(false);
+						//v.item.setVisible(false);
 						
 						
 						
