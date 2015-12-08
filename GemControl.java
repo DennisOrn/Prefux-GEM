@@ -42,7 +42,7 @@ public class GemControl extends ControlAdapter {
 	private static int COLLAPSED_COLOR	= ColorLib.rgb(255, 165, 0);	// ORANGE*/
 	
 	public static Paint NORMAL_COLOR		= Color.DARKSLATEBLUE;
-	public static Paint SELECTED_COLOR		= Color.BLUE;
+	public static Paint SELECTED_COLOR		= Color.DEEPSKYBLUE;
 	public static Paint COLLAPSED_COLOR		= Color.ORANGE;
     
     private class ItemInfo {
