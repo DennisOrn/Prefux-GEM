@@ -296,6 +296,14 @@ public class GemTest extends Application {
 			
 			/******************** TOUCH-FUNCTIONALITY ********************/
 			
+			/*
+			 * This is used to move, rotate and zoom in and out on the graph.
+			 * The functionality for selecting and moving nodes and collapsing
+			 * / expanding is located in prefux.controls.GemControl.
+			 */
+			
+			
+			
 			/* Mouse */
 			/*class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
@@ -312,6 +320,8 @@ public class GemTest extends Application {
 				event.consume();
 			});*/
 			/* Mouse */
+			
+			
 			
 			root.setOnTouchPressed(event -> {
 				if(moveInProgress == false) {

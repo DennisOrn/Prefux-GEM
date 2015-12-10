@@ -38,24 +38,11 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.prism.paint.Color;
 
-import javafx.collections.ObservableList;
-import javafx.scene.Group;
-import javafx.scene.Parent;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.paint.*;
 import prefux.action.layout.Layout;
 import prefux.data.Edge;
 import prefux.data.Graph;
 import prefux.data.Node;
-import prefux.render.CombinedRenderer;
-import prefux.render.Renderer;
-import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
 import prefux.visual.VisualItem;
 
@@ -103,8 +90,7 @@ public class GraphEmbedderLayout extends Layout {
 	/**
 	 * Create a new GraphEmbedderLayout.
 	 * 
-	 * @param graph
-	 *            the data group to layout. Must resolve to a Graph instance.
+	 * @param graph the data group to layout. Must resolve to a Graph instance.
 	 */
 	public GraphEmbedderLayout(String graph) {
 		super(graph);
@@ -112,14 +98,18 @@ public class GraphEmbedderLayout extends Layout {
 		m_edgeGroup = PrefuseLib.getGroupName(graph, Graph.EDGES);
 	}
 	
+    /**
+     * Initializes the algorithm and all the variables that are needed.
+     */
 	private void init() {
 		
 		System.out.println("-------------------------------------");
 		System.out.println("Initializing algorithm...");
 		
-		// Place all nodes in random positions and add them to nodeList
+		// Place all the nodes in random positions and add them to nodeList.
 		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
 		while (iter.hasNext()) {
+			
 			VisualItem item = iter.next();
 			
 			double newX = (Math.random() * 2048) - 1024;
@@ -145,14 +135,16 @@ public class GraphEmbedderLayout extends Layout {
 		
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
 		
-		// Make sure the neighbors are added to every node
+		// Make sure the neighbors are added to every node.
 		for(Vertex v : nodeList) {
+			
 			Iterator<? extends Edge> it = ((Node)v.item).edges();
 			while(it.hasNext()) {
+				
 				Edge e = it.next();
 				VisualItem u = (VisualItem)e.getSourceNode();
 				
-				// Make sure u and v are not the same node
+				// Make sure u and v are not the same node.
 				
 				if(u == v.item) {
 					u = (VisualItem)e.getTargetNode();
@@ -188,17 +180,17 @@ public class GraphEmbedderLayout extends Layout {
 		
 		if(!initialized) {
 			init();
-		}
+		} // TODO: this might me unnecessary.
 		
 		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
-		//while(nrRounds < 30) {
 			
 			System.out.println("-------------------------------------");
 			System.out.println("ROUND " + (nrRounds + 1));
 			
-			// Reset the global temperature at the start of every round
+			// Reset the global temperature at the start of every round.
 			globalTemp = 0;
-		
+			
+			// Shuffle the list before every iteration.
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
 				double[] imp = calculateImpulse(v);
@@ -212,7 +204,7 @@ public class GraphEmbedderLayout extends Layout {
 			
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
-			// Update the graph every n rounds
+			// Update the visualization every n rounds.
 			int n = 20;
 			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
 				for(Vertex v : nodeList) {
@@ -221,35 +213,23 @@ public class GraphEmbedderLayout extends Layout {
 					
 					if(globalTemp < desiredTemp) {
 						
+						// The algorithm has finished, set fixed to true to enable
+						// the touch-functionality in prefux.controls.GemControl.
 						v.item.setFixed(true);
-						
-						//v.item.setVisible(false);
-						
-						
-						
-						
-						//v.item.setFillColor(ColorLib.rgb(0, 0, 0));
-						
-						/*Renderer renderer = v.item.getRenderer(); 
-						System.out.println(renderer);
-						v.item.setSize(30);*/
-						
-						//v.item.render(v.item.getVisualization().getDisplay(0));
 					}
-					
-					//System.out.println(v.item.isVisible());
-					//v.item.setVisible(false);
 				}
 			}
 		}
-		
-		//getVisualization().repaint();
 	}
 	
 	private double calculateScalingFactor(Vertex v) {
 		return 1 + v.neighbors.size() / 2;
 	}
 	
+    /**
+     * Calculates the barycenter, or the center of mass).
+     * @return the coordinates for the barycenter
+     */
 	private double[] calculateBarycenter() {
 		double[] center = new double[2];
 		center[0] = sumPos[0] / nodeList.size();
@@ -257,9 +237,15 @@ public class GraphEmbedderLayout extends Layout {
 		return center;
 	}
 	
+    /**
+     * Calculates the impulse, which is the direction the
+     * node wants to move towards.
+     * @param v the vertex for which we want the impulse
+     * @return an impulse vector
+     */
 	private double[] calculateImpulse(Vertex v) {
 		
-		// Attraction to center of gravity
+		// Attraction to the barycenter.
 		double[] impulse = new double[2];
 		impulse = calculateBarycenter();
 		
@@ -270,16 +256,17 @@ public class GraphEmbedderLayout extends Layout {
 		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
 		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
 		
-		// Random disturbance vector; default range: [-32,32] * [-32,32]
+		// Random disturbance vector; default range: [-32,32] * [-32,32].
 		impulse[0] = impulse[0] + Math.random() * 40 - 20;
 		impulse[1] = impulse[1] + Math.random() * 40 - 20;
 		
 		double desSquared = desiredEdgeLength * desiredEdgeLength;
 		
-		// For every node in the graph: calculate repulsive forces
+		// For every node in the graph: calculate the repulsive forces.
+		// NOTE: this is the most time-critical part of the algorithm.
 		for(Vertex u : nodeList) {
 			
-			// If u and v are the same: skip iteration
+			// If u and v are the same item: skip the iteration.
 			if(u.item == v.item) {
 				continue;
 			}
@@ -299,7 +286,7 @@ public class GraphEmbedderLayout extends Layout {
 		
 		double desSquaredScaled = desSquared * scalingFactor;
 		
-		// For every node connected to v: calculate attractive forces
+		// For every node connected to v: calculate the attractive forces.
 		for(Vertex u : v.neighbors) {
 			
 			double[] delta = new double[2];
@@ -317,47 +304,53 @@ public class GraphEmbedderLayout extends Layout {
 		return impulse;
 	}
 	
+    /**
+     * Calculates the temperature, which is the distance the
+     * node is going to move. The node is then moved in the 
+     * @param v the vertex that is going to be moved
+     * @param impulse the vector that is returned from {@link #calculateImpulse(Vertex)}
+     */
 	private void calculateTemperature(Vertex v, double[] impulse) {
 		
-		// If the current impulse is not 0 
+		// If the current impulse is not 0.
 		if(impulse[0] != 0 || impulse[1] != 0) {
 			
-			// Scale the impulse with the current temperature
+			// Scale the impulse with the current temperature.
 			double length = Math.sqrt(impulse[0] * impulse[0] + impulse[1] * impulse[1]);
 			impulse[0] = v.temp * impulse[0] / length;
 			impulse[1] = v.temp * impulse[1] / length;
 			
-			// Update v's coordinates
+			// Update v's coordinates.
 			v.coordinates[0] += impulse[0];
 			v.coordinates[1] += impulse[1];
 			
-			// Update the sum of all node-coordinates
+			// Update the sum of all node-coordinates (used for calculating the barycenter)
 			sumPos[0] += impulse[0];
 			sumPos[1] += impulse[1];
 		}
 		
 		double[] oldImpulse = v.impulse;
 		
-		// If the last impulse was not 0		
+		// If the last impulse was not 0.
 		if(oldImpulse[0] != 0 || oldImpulse[1] != 0) {
 			
-			// Calculate the angle between the last impulse and the current impulse
+			// Calculate the angle between the last impulse and the current impulse.
 			double uLen = Math.sqrt(impulse[0] * impulse[0] + impulse[1] * impulse[1]);
 			double vLen = Math.sqrt(oldImpulse[0] * oldImpulse[0] + oldImpulse[1] * oldImpulse[1]);
 			double dot = impulse[0] * oldImpulse[0] + impulse[1] * oldImpulse[1];
 			double cosAngle = dot / (uLen * vLen);
 			double angle = Math.acos(cosAngle);
 			
-			// Check for rotation
+			// Check for rotation.
 			if(Math.sin(angle) >= Math.sin((Math.PI / 2) + (rotationOpeningAngle / 2))) {
 				v.skew = v.skew + rotationSensitivity * Math.signum(Math.sin(angle));
 			}
 			
-			// Check for oscillation OR move in the right direction
+			// Check for oscillation or move in the right direction.
 			if(Math.abs(Math.cos(angle)) >= Math.cos(oscillationOpeningAngle / 2)) {
-				if(Math.cos(angle) > 0) { // move in the right direction
+				if(Math.cos(angle) > 0) { // Move in the right direction detected: increase temperature.
 					v.temp = v.temp * oscillationSensitivity;
-				} else { // oscillation
+				} else { // Oscillation detected: decrease temperature.
 					v.temp = v.temp / oscillationSensitivity;
 				}
 			}
@@ -367,8 +360,7 @@ public class GraphEmbedderLayout extends Layout {
 		}
 		v.impulse = impulse;
 		
-		// Add the node's temperature to the global temperature
+		// Add the node's temperature to the global temperature.
 		globalTemp += v.temp;
 	}
-
-} // end of class GraphEmbedderLayout
+}

@@ -25,6 +25,10 @@ import prefux.visual.VisualItem;
  * GemControl handles the selection, collapsing/expanding and movements of nodes
  */
 
+/*
+ * This is used to select and move nodes and collapsing / expanding.
+ */
+
 public class GemControl extends ControlAdapter {
 	
 	public static Paint NORMAL_COLOR			= Color.DEEPSKYBLUE;
@@ -35,8 +39,8 @@ public class GemControl extends ControlAdapter {
 	// Used to calculate how long a node has been pressed
     private long startTime = 0;
     
-    // The item that is currently touched
-    // if null: nothing is touched or the touched item is not selected
+    // The item that is currently touched.
+    // Will be set when the user press and hold on the item.
     private VisualItem touchedItem;
     
     // Used to determine if the currently touched item is selected or not.
@@ -44,15 +48,6 @@ public class GemControl extends ControlAdapter {
     
     // A list of all the currently selected items.
     private List<VisualItem> selectedItems = new ArrayList<>();
-    
-    /**
-     * Create a new collapse control.
-     */
-    public GemControl() {}
-    
-    /*public GemControl(FxDisplay display) {
-    	this.display = display;
-    }*/
     
 	@Override
 	public void itemEvent(VisualItem item, Event e)
@@ -67,26 +62,27 @@ public class GemControl extends ControlAdapter {
 			
 			else if(e.getEventType() == TouchEvent.TOUCH_STATIONARY && item instanceof NodeItem) {
 				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
+				
 				if(elapsedTime > 500 && touchedItem != item ) {
 					
-					touchedItem = item;
-					if(!selected) { // Select the item
+					touchedItem = item; // To prevent the if-statement above to be true over and over again.
+					if(!selected) { // Select the item.
 						
 						selectedItems.add(item);
 						item.setHighlighted(true);
 						
-						// Change the stroke-width of the circle
+						// Change the stroke-width to indicate that the item is selected.
 						Circle circle = getCircle((Node) item);
 						if(circle != null) {
 							circle.setStrokeWidth(SELECTED_STROKE_WIDTH);
 						}
 						
-					} else { // Deselect the item
+					} else { // Deselect the item.
 						
 						selectedItems.remove(item);
 						item.setHighlighted(false);
 						
-						// Change the stroke-width of the circle
+						// Change the stroke-width to indicate that the item no longer selected.
 						Circle circle = getCircle((Node) item);
 						if(circle != null) {
 							circle.setStrokeWidth(NORMAL_STROKE_WIDTH);
@@ -109,16 +105,16 @@ public class GemControl extends ControlAdapter {
 						Node node = (Node) item;
 						hideChildren(node);
 						
-						// Change the color of the circle
-						Circle circle = getCircle(node);
-						if(circle != null) {
-							circle.setFill(COLLAPSED_COLOR);
-						}
-						
-						// Hide lines
+						// Hide the "outgoing" edges.
 						List<Line> lines = getLines(node);
 						for(Line line : lines) {
 							line.setVisible(false);
+						}
+						
+						// Change the color to indicate that the item is collapsed.
+						Circle circle = getCircle(node);
+						if(circle != null) {
+							circle.setFill(COLLAPSED_COLOR);
 						}
 						
 						item.setExpanded(false);
@@ -128,17 +124,17 @@ public class GemControl extends ControlAdapter {
 						Node node = (Node) item;
 			    		showChildren(node);
 			    		
-			    		// Change the color of the circle
-			    		Circle circle = getCircle(node);
-			    		if(circle != null) {
-			    			circle.setFill(NORMAL_COLOR);
-			    		}
-			    		
-			    		// Show lines
+			    		// Show the "outgoing" edges.
 			    		List<Line> lines = getLines(node);
 						for(Line line : lines) {
 							line.setVisible(true);
 						}
+			    		
+			    		// Change the color to indicate that the item is expanded.
+			    		Circle circle = getCircle(node);
+			    		if(circle != null) {
+			    			circle.setFill(NORMAL_COLOR);
+			    		}
 			    		
 						item.setExpanded(true);
 					}
@@ -155,7 +151,7 @@ public class GemControl extends ControlAdapter {
 					TouchEvent ev = (TouchEvent) e;
 					TouchPoint point = ev.getTouchPoint();
 					
-					// Move all selected items
+					// Move all the selected items.
 					for(VisualItem vi : selectedItems) {
 						if(vi.isExpanded() && vi.isVisible()) {
 							vi.setX(vi.getX() + point.getX());
@@ -168,27 +164,33 @@ public class GemControl extends ControlAdapter {
 		
 		e.consume();
     }
-    
+	
+    /**
+     * Recursive method that hides all the children of the node
+     * that is passed to the method.
+     */
     private void hideChildren(Node node) {
     	Iterator<? extends Node> it = node.outNeighbors();
 		while(it.hasNext()) {
 			
 			Node child = it.next();
+			
+			// Recursive method-call
 			hideChildren(child);
 			
-			// Hide circle
+			// Hide the circle
 			Circle circle = getCircle(child);
 			if(circle != null) {
 				circle.setVisible(false);
 			}
 			
-			// Hide label
+			// Hide the label
 			Label label = getLabel(child);
 			if(label != null) {
 				label.setVisible(false);
 			}
 			
-			// Hide lines
+			// Hide the lines
 			List<Line> lines = getLines(child);
 			for(Line line : lines) {
 				line.setVisible(false);
@@ -199,14 +201,20 @@ public class GemControl extends ControlAdapter {
 		}
     }
     
+    /**
+     * Recursive method that shows all the children of the node
+     * that is passed to the method.
+     */
     private void showChildren(Node node) {
     	Iterator<? extends Node> it = node.outNeighbors();
 		while(it.hasNext()) {
 			
 			Node child = it.next();
+			
+			// Recursive method-call
 			showChildren(child);
 			
-			// Show circle
+			// Show the circle
 			Circle circle = getCircle(child);
 			if(circle != null) {
 				circle.setVisible(true);
@@ -216,22 +224,28 @@ public class GemControl extends ControlAdapter {
 			// Show label
 			/*Label label = getLabel(child);
 			if(label != null) {
-				//if(label.isVisible())////////////////////////////
+				//if(label.isVisible())//////////////////////////// TODO: WHAT
 				label.setVisible(true);
 			}*/
 			
-			// Show lines
+			// Show the lines
 			List<Line> lines = getLines(child);
 			for(Line line : lines) {
 				line.setVisible(true);
 			}
 			
 			VisualItem item = (VisualItem) child;
+			
+			// All the items will be expanded.
 			item.setExpanded(true);
 			item.setVisible(true);
 		}
     }
     
+    /**
+     * Returns the circle that is associated with the node
+     * that is passed to the method.
+     */
     private Circle getCircle(Node node) {
     	
     	VisualItem item = (VisualItem) node;
@@ -250,6 +264,10 @@ public class GemControl extends ControlAdapter {
     	return null;
     }
     
+    /**
+     * Returns the label that is associated with the node
+     * that is passed to the method.
+     */
     private Label getLabel(Node node) {
     	
 	    VisualItem item = (VisualItem) node;
@@ -275,6 +293,10 @@ public class GemControl extends ControlAdapter {
 		return null;
     }
     
+    /**
+     * Returns a list with all the lines that are associated
+     * with the node that is passed to the method.
+     */
     private List<Line> getLines(Node node) {
     	
     	List<Line> lines = new ArrayList<>();
@@ -284,6 +306,7 @@ public class GemControl extends ControlAdapter {
     		Edge edge = it.next();
     		VisualItem item = (VisualItem) edge;
     		if(item.getNode() instanceof Line) {
+    			
     			Line line = (Line) item.getNode();
 				lines.add(line);
     		}
