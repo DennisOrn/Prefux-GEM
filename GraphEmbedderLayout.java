@@ -69,7 +69,7 @@ public class GraphEmbedderLayout extends Layout {
 	private double[] sumPos = new double[2];
 	
 	private final double maxTemp					= 1000;
-	private final double desiredTemp				= 500;
+	private final double desiredTemp				= 100;
 	private final double desiredEdgeLength			= 256;
 	private final double gravitationalConstant		= (double)1 / 16;
 	

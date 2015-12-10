@@ -1,69 +1,51 @@
 package fx;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.input.RotateEvent;
-import javafx.scene.input.TouchEvent;
-import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import prefux.Constants;
 import prefux.FxDisplay;
 import prefux.Visualization;
 import prefux.action.ActionList;
 import prefux.action.RepaintAction;
 import prefux.action.assignment.ColorAction;
-import prefux.action.assignment.DataColorAction;
 import prefux.action.assignment.NodeDegreeSizeAction;
-import prefux.action.layout.Layout;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
-import prefux.controls.DragControl;
 import prefux.controls.GemControl;
 import prefux.data.Graph;
-import prefux.data.Schema;
+import prefux.data.Node;
 import prefux.data.Table;
 import prefux.data.Tuple;
 import prefux.data.expression.Predicate;
 import prefux.data.expression.parser.ExpressionParser;
 import prefux.data.util.Point2D;
-import prefux.data.util.Rectangle2D;
-import prefux.render.ArrowRenderer;
 import prefux.render.CombinedRenderer;
 import prefux.render.DefaultRendererFactory;
 import prefux.render.EdgeRenderer;
 import prefux.render.LabelRenderer;
 import prefux.render.NullRenderer;
 import prefux.render.ShapeRenderer;
-import prefux.render.StackPaneRenderer;
 import prefux.util.ColorLib;
-import prefux.util.FontLib;
 import prefux.util.PrefuseLib;
-import prefux.visual.DecoratorItem;
 import prefux.visual.VisualItem;
 import prefux.visual.VisualTupleSet;
 import prefux.visual.expression.InGroupPredicate;
 import prefux.visual.expression.VisiblePredicate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -85,22 +67,15 @@ public class GemTest extends Application {
 	Table nodeTable = new Table();
 	Table edgeTable = new Table();
 	List<OntClass> ontList = new ArrayList<>();
-	//double lastX, lastY;
 	
-	private VisualTupleSet visualTupleSet;
-	private List<Label> labels = new ArrayList<>();
-	private double labelSize = 16;
-	private double labelSizeAdjusted;
+	private HashMap<VisualItem, Label> itemLabelMap = new HashMap<>();
+	private double labelSize = 12;
+	private double labelSizeAdjusted; // Adjusts when the user zooms in and out
 	
 	private double startScale, startRotate;
     private boolean moveInProgress = false;
     private int touchPointId;
     private Point2D prevPos;
-    
-    private double zoomValue = 1;
-    private double zoomFactor = 1;
-    private Point2D anchor;
-    private Point2D oldAnchor;
     
 	@Override
 	public void start(Stage primaryStage) {
@@ -128,8 +103,8 @@ public class GemTest extends Application {
 		
 		try {
 			
-			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
@@ -225,8 +200,8 @@ public class GemTest extends Application {
 			LabelRenderer lr = new LabelRenderer("name");
 			//lr.setHorizontalAlignment(Constants.LEFT);
 			
-			Predicate pVisible		= (Predicate)ExpressionParser.parse("VISIBLE()");
-			Predicate pNotVisible	= (Predicate)ExpressionParser.parse("!VISIBLE()");
+			//Predicate pVisible		= (Predicate)ExpressionParser.parse("VISIBLE()");
+			//Predicate pNotVisible	= (Predicate)ExpressionParser.parse("!VISIBLE()");
 			
 			//rfa.add(pVisible, r);
 			//rfa.add(pVisible, new ShapeRenderer());
@@ -258,7 +233,7 @@ public class GemTest extends Application {
 			//rfa.add(pVisible, er);
 			rfa.setDefaultRenderer(cr);
 			//rfa.setDefaultEdgeRenderer(er);
-			ArrowRenderer arrowRenderer = new ArrowRenderer();
+			//ArrowRenderer arrowRenderer = new ArrowRenderer();
 			//rfa.setDefaultEdgeRenderer(arrowRenderer);
 			rfa.setDefaultEdgeRenderer(er);
 			
@@ -381,11 +356,53 @@ public class GemTest extends Application {
 	        });
 			
 			root.setOnZoomFinished(event -> {
-				// TODO: if zoom factor is [SOMETHING]: show more labels?
+				
 				labelSizeAdjusted = labelSize / root.getScaleX();
-				for(Label label : labels) {
-					label.setFont(new Font(labelSizeAdjusted));
+				
+				int degree;
+				double scale = root.getScaleX();
+				
+				System.out.println("-------------------------");
+				System.out.println("scale: " + scale);
+				
+				if(scale <= 0.05) {
+					degree = 10;
+				} else if(scale > 0.05 && scale <= 0.1) {
+					degree = 7;
+				} else if(scale > 0.1 && scale <= 0.2) {
+					degree = 5;
+				} else if(scale > 0.2 && scale <= 0.3) {
+					degree = 3;
+				} else {
+					degree = 0;
 				}
+				
+				System.out.println("degree: " + degree);
+				
+				/*for(Label label : labels) {
+					
+					//System.out.println("root.getScale: " + root.getScaleX());
+					
+					// TODO: HASHTABLE OR SOMETHING WITH VISUALITEM/NODE AND LABEL
+					// ONLY ADJUST VISIBLE
+					
+					
+					label.setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
+				}*/
+				
+				for(Map.Entry<VisualItem, Label> entry : itemLabelMap.entrySet()) {
+			        
+					Node node = (Node) entry.getKey();
+					if(node.getDegree() >= degree) {
+						entry.getValue().setManaged(true);
+						entry.getValue().setVisible(true);
+						entry.getValue().setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
+					} else {
+						entry.getValue().setManaged(false);
+						entry.getValue().setVisible(false);
+					}
+			    }
+				
 				event.consume();
 	        });
 	        
@@ -395,7 +412,7 @@ public class GemTest extends Application {
 	        });
 			
 			root.setOnRotate(event -> {
-				root.setRotate(startRotate + event.getTotalAngle());
+				//root.setRotate(startRotate + event.getTotalAngle());
 				
 				/*
 					Rotating labels in real-time.
@@ -411,9 +428,9 @@ public class GemTest extends Application {
 			
 			root.setOnRotationFinished(event -> {
 				// TODO: only rotate visible labels?
-				for(Label label : labels) {
+				/*for(Label label : labels) {
 					label.setRotate(0 - root.getRotate());
-				}
+				}*/
 				// TODO: rotation offsets the label, NOT GOOD! It rotates around the center of the label (?)
 				event.consume();
 	        });
@@ -472,7 +489,7 @@ public class GemTest extends Application {
 					if(groupChild instanceof Circle) {
 						
 						Circle circle = (Circle) groupChild;
-						circle.setFill(javafx.scene.paint.Color.LIGHTSEAGREEN);
+						circle.setFill(javafx.scene.paint.Color.DEEPSKYBLUE);
 						circle.setStroke(javafx.scene.paint.Color.BLACK);
 						circle.setStrokeWidth(3);
 						//circle.setVisible(false);
@@ -490,16 +507,18 @@ public class GemTest extends Application {
 							if(stackChild instanceof Label) {
 								
 								Label label = (Label) stackChild;
-								label.setFont(new Font(labelSizeAdjusted));
+								//label.setFont(new Font(labelSizeAdjusted));
+								label.setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
+								
 								if(((prefux.data.Node) item).getDegree() < 10) {
 									
-									//label.setVisible(false);
 									label.setManaged(false);
+									label.setVisible(false);
 									//label.setFont(new Font(0));
 									// TODO: COLLAPSE AND HIDE CHILDREN AS WELL?
 								}
 								
-								labels.add(label);
+								itemLabelMap.put(item, label);
 							}
 						}
 					}
