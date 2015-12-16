@@ -27,7 +27,10 @@ import prefux.data.Table;
 import prefux.data.Tuple;
 import prefux.data.expression.Predicate;
 import prefux.data.expression.parser.ExpressionParser;
+import prefux.data.io.DataIOException;
+import prefux.data.io.GraphMLReader;
 import prefux.data.util.Point2D;
+import prefux.render.ArrowRenderer;
 import prefux.render.CombinedRenderer;
 import prefux.render.DefaultRendererFactory;
 import prefux.render.EdgeRenderer;
@@ -83,10 +86,10 @@ public class GemTest extends Application {
 		primaryStage.setTitle("GEM");
 		Pane root = new Pane();
 		
-		root.setScaleX(0.05);
-        root.setScaleY(0.05);
-		//root.setScaleX(0.25);
-        //root.setScaleY(0.25);
+		//root.setScaleX(0.05);
+        //root.setScaleY(0.05);
+		root.setScaleX(0.15);
+        root.setScaleY(0.15);
         
         /*****/
         labelSizeAdjusted = labelSize / root.getScaleX();
@@ -103,9 +106,9 @@ public class GemTest extends Application {
 		
 		try {
 			
-			m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
 				System.out.println(cls);
@@ -155,6 +158,7 @@ public class GemTest extends Application {
 			
 			// graph = new GraphMLReader().readGraph("data/graphml-sample.xml");
 			//graph = new GraphMLReader().readGraph("data/socialnet2.xml");
+			
 			Visualization vis = new Visualization();
 			vis.add(GROUP, graph);
 
@@ -203,15 +207,9 @@ public class GemTest extends Application {
 			//Predicate pVisible		= (Predicate)ExpressionParser.parse("VISIBLE()");
 			//Predicate pNotVisible	= (Predicate)ExpressionParser.parse("!VISIBLE()");
 			
-			//rfa.add(pVisible, r);
-			//rfa.add(pVisible, new ShapeRenderer());
 			ShapeRenderer sr = new ShapeRenderer();
-			//sr.setFillMode(ShapeRenderer.SOLID);
-			//sr.setRenderType(ShapeRenderer.RENDER_TYPE_DRAW_AND_FILL);
 			sr.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
 			sr.setBaseSize(30);
-			
-			//lr.setHorizontalPadding(50);
 			
 			EdgeRenderer er = new EdgeRenderer();
 			CombinedRenderer cr = new CombinedRenderer();
@@ -233,9 +231,10 @@ public class GemTest extends Application {
 			//rfa.add(pVisible, er);
 			rfa.setDefaultRenderer(cr);
 			//rfa.setDefaultEdgeRenderer(er);
-			//ArrowRenderer arrowRenderer = new ArrowRenderer();
-			//rfa.setDefaultEdgeRenderer(arrowRenderer);
-			rfa.setDefaultEdgeRenderer(er);
+			ArrowRenderer arrowRenderer = new ArrowRenderer();
+			rfa.setDefaultEdgeRenderer(arrowRenderer);
+			
+			//rfa.setDefaultEdgeRenderer(er);
 			
 			//rfa.add(new InGroupPredicate("NODE_DECORATORS"), lr);
 			
@@ -305,7 +304,7 @@ public class GemTest extends Application {
 			
 			
 			/* Mouse */
-			/*class Delta { double x, y; }
+			class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
 			root.setOnMouseMoved(event -> {
@@ -318,7 +317,7 @@ public class GemTest extends Application {
 				display.setLayoutX(event.getX() + dragDelta.x);
 				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
-			});*/
+			});
 			/* Mouse */
 			
 			

@@ -31,16 +31,16 @@ import prefux.visual.VisualItem;
 
 public class GemControl extends ControlAdapter {
 	
-	public static Paint NORMAL_COLOR			= Color.DEEPSKYBLUE;
-	public static Paint COLLAPSED_COLOR			= Color.ORANGE;
-	public static double NORMAL_STROKE_WIDTH	= 3;
-	public static double SELECTED_STROKE_WIDTH	= 15; 
+	private static Paint NORMAL_COLOR				= Color.DEEPSKYBLUE;
+	private static Paint COLLAPSED_COLOR			= Color.ORANGE;
+	private static double NORMAL_STROKE_WIDTH		= 3;
+	private static double SELECTED_STROKE_WIDTH		= 15; 
     
 	// Used to calculate how long a node has been pressed
     private long startTime = 0;
     
     // The item that is currently touched.
-    // Will be set when the user press and hold on the item.
+    // Will be set when the user presses an item and holds it.
     private VisualItem touchedItem;
     
     // Used to determine if the currently touched item is selected or not.
@@ -50,8 +50,8 @@ public class GemControl extends ControlAdapter {
     private List<VisualItem> selectedItems = new ArrayList<>();
     
 	@Override
-	public void itemEvent(VisualItem item, Event e)
-	{
+	public void itemEvent(VisualItem item, Event e) {
+		
 		// Handle event only if algorithm has finished.
 		if(item.isFixed()) {
 			
@@ -294,8 +294,8 @@ public class GemControl extends ControlAdapter {
     }
     
     /**
-     * Returns a list with all the lines that are associated
-     * with the node that is passed to the method.
+     * Returns a list with all the "outgoing" lines that are
+     * connected to the node that is passed to the method.
      */
     private List<Line> getLines(Node node) {
     	
