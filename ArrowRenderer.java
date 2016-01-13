@@ -34,6 +34,7 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
@@ -41,6 +42,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.transform.Rotate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,25 +80,24 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 		return false;
 	}
 	
-	private static void adjustArrowRotation(Polygon polygon, double startX, double startY, double endX, double endY) { // TODO: static?
+	private void adjustArrowRotation(EdgeItem edge, Polygon polygon) { // TODO: static?
 		
-		//System.out.println("-------------------------");
+		double startX = edge.getSourceItem().xProperty().get();
+		double startY = edge.getSourceItem().yProperty().get();
+		double endX = edge.getTargetItem().xProperty().get();
+		double endY = edge.getTargetItem().yProperty().get();
+		
 		double x = endX - startX;
 		double y = endY - startY;
 		
 		double angle = Math.toDegrees(Math.atan2(y, x));
 		
-		//System.out.println("angle     : " + angle);
-		//System.out.println("angle - 90: " + (angle - 90));
+		angle += 90;
 		
-		angle = angle + 90;
-		
-		//polygon.setRotate(angle);
-		//polygon.setRotate(0);
-		polygon.rotateProperty().set(angle);
+		Rotate rotation = (Rotate) polygon.getTransforms().get(0);
+		rotation.setAngle(angle);
 		
 		// setRotate(0): arrows point downwards
-		
 		// y-axis inverted
 	}
 
@@ -105,21 +106,20 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 		EdgeItem edge = (EdgeItem) item;
 		Line line = new Line();
 		line.setStrokeWidth(3);
+		
 		Polygon polygon = new Polygon(
-				0.0, -100.0,
 				0.0, 0.0,
-                -30.0, 100.0,
-                30.0, 100.0
+                -20.0, 80.0,
+                20.0, 80.0,
+                0.0, 0.0
         );
 		
-		//polygon.setFill(javafx.scene.paint.Color.WHITE);
+		polygon.getTransforms().add(new Rotate(0, 0, 0));
 		polygon.setStroke(javafx.scene.paint.Color.BLACK);
-		polygon.setStrokeWidth(3);
 		Group group = new Group(line, polygon);
 		
 		if (bind) {
 			Platform.runLater(() -> {
-				
 				line.startXProperty().bind(edge.getSourceItem().xProperty());
 				line.startYProperty().bind(edge.getSourceItem().yProperty());
 				line.endXProperty().bind(edge.getTargetItem().xProperty());
@@ -128,40 +128,21 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 				polygon.layoutXProperty().bind(line.endXProperty());
 				polygon.layoutYProperty().bind(line.endYProperty());
 				
-				
-				
-				/*DoubleProperty centerLineX = new SimpleDoubleProperty((line.startXProperty().get() + line.endXProperty().get()) / 2);
-				DoubleProperty centerLineY = new SimpleDoubleProperty((line.startYProperty().get() + line.endYProperty().get()) / 2);
-				
-				polygon.layoutXProperty().bind(centerLineX);
-				polygon.layoutYProperty().bind(centerLineY);*/
-				
-				//double angle;
-				
 				edge.getTargetItem().xProperty().addListener((observable, oldValue, newValue) -> {
-				    //System.out.println("xProperty: " + oldValue + " -> " + newValue);
-				    //polygon.layoutXProperty().set(newValue.doubleValue());
-					//polygon.setRotate(Math.random() * 360);
-					double startX = edge.getSourceItem().xProperty().get();
-					double startY = edge.getSourceItem().yProperty().get();
-					double endX = edge.getTargetItem().xProperty().get();
-					double endY = edge.getTargetItem().yProperty().get();
-					adjustArrowRotation(polygon, startX, startY, endX, endY);
-					
+					adjustArrowRotation(edge, polygon);
 				});
 				
 				edge.getTargetItem().yProperty().addListener((observable, oldValue, newValue) -> {
-					//System.out.println("yProperty: " + oldValue + " -> " + newValue);
-				    //polygon.layoutYProperty().set(newValue.doubleValue());
-					double startX = edge.getSourceItem().xProperty().get();
-					double startY = edge.getSourceItem().yProperty().get();
-					double endX = edge.getTargetItem().xProperty().get();
-					double endY = edge.getTargetItem().yProperty().get();
-					adjustArrowRotation(polygon, startX, startY, endX, endY);
+					adjustArrowRotation(edge, polygon);
 				});
 				
-				//polygon.layoutXProperty().bind(edge.getTargetItem().xProperty().get());
-				//polygon.rotateProperty().bind(observable);
+				edge.getSourceItem().xProperty().addListener((observable, oldValue, newValue) -> {
+					adjustArrowRotation(edge, polygon);
+				});
+				
+				edge.getSourceItem().yProperty().addListener((observable, oldValue, newValue) -> {
+					adjustArrowRotation(edge, polygon);
+				});
 			});
 		}
 		return group;

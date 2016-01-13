@@ -86,10 +86,10 @@ public class GemTest extends Application {
 		primaryStage.setTitle("GEM");
 		Pane root = new Pane();
 		
-		//root.setScaleX(0.05);
-        //root.setScaleY(0.05);
-		root.setScaleX(0.15);
-        root.setScaleY(0.15);
+		root.setScaleX(0.05);
+        root.setScaleY(0.05);
+		//root.setScaleX(0.30);
+        //root.setScaleY(0.30);
         
         /*****/
         labelSizeAdjusted = labelSize / root.getScaleX();
@@ -158,6 +158,7 @@ public class GemTest extends Application {
 			
 			// graph = new GraphMLReader().readGraph("data/graphml-sample.xml");
 			//graph = new GraphMLReader().readGraph("data/socialnet2.xml");
+			
 			
 			Visualization vis = new Visualization();
 			vis.add(GROUP, graph);
