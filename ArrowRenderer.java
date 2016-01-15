@@ -31,17 +31,10 @@
 package prefux.render;
 
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.StrokeType;
 import javafx.scene.transform.Rotate;
 
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +73,7 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 		return false;
 	}
 	
-	private void adjustArrowRotation(EdgeItem edge, Polygon polygon) { // TODO: static?
+	private void adjustArrowRotation(EdgeItem edge, Polygon polygon) {
 		
 		double startX = edge.getSourceItem().xProperty().get();
 		double startY = edge.getSourceItem().yProperty().get();
@@ -96,13 +89,11 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 		
 		Rotate rotation = (Rotate) polygon.getTransforms().get(0);
 		rotation.setAngle(angle);
-		
-		// setRotate(0): arrows point downwards
-		// y-axis inverted
 	}
 
 	@Override
 	protected Node getRawShape(VisualItem item, boolean bind) {
+		
 		EdgeItem edge = (EdgeItem) item;
 		Line line = new Line();
 		line.setStrokeWidth(3);
@@ -145,6 +136,7 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 				});
 			});
 		}
+		
 		return group;
 	}
 
@@ -153,4 +145,4 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 		return DEFAULT_STYLE_CLASS;
 	}
 
-} // end of class EdgeRenderer
+}

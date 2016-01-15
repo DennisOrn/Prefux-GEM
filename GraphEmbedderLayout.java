@@ -58,7 +58,7 @@ public class GraphEmbedderLayout extends Layout {
 	private final double maxTemp					= 1000;
 	private final double desiredTemp				= 30;
 	private final double desiredEdgeLength			= 256;
-	private final double gravitationalConstant		= (double)1 / 16;
+	private final double gravitationalConstant		= (double) 1 / 16;
 	
 	private final double oscillationOpeningAngle	= Math.PI / 4;
 	private final double rotationOpeningAngle		= Math.PI / 3;
@@ -163,7 +163,7 @@ public class GraphEmbedderLayout extends Layout {
 		maxRounds = nodeList.size() * 4;
 		System.out.println("maxRounds set to: " + maxRounds + ".");
 		
-		rotationSensitivity = (double)1 / (2 * nodeList.size());
+		rotationSensitivity = (double) 1 / (2 * nodeList.size());
 		System.out.println("rotationSensitivity set to: " + rotationSensitivity + ".");
 		
 		initialized = true;

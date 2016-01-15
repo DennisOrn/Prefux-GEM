@@ -25,10 +25,6 @@ import prefux.data.Graph;
 import prefux.data.Node;
 import prefux.data.Table;
 import prefux.data.Tuple;
-import prefux.data.expression.Predicate;
-import prefux.data.expression.parser.ExpressionParser;
-import prefux.data.io.DataIOException;
-import prefux.data.io.GraphMLReader;
 import prefux.data.util.Point2D;
 import prefux.render.ArrowRenderer;
 import prefux.render.CombinedRenderer;
@@ -41,8 +37,6 @@ import prefux.util.ColorLib;
 import prefux.util.PrefuseLib;
 import prefux.visual.VisualItem;
 import prefux.visual.VisualTupleSet;
-import prefux.visual.expression.InGroupPredicate;
-import prefux.visual.expression.VisiblePredicate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,9 +47,7 @@ import java.util.Map;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.ontology.OntResource;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.Filter;
 
 public class GemTest extends Application {
@@ -212,9 +204,9 @@ public class GemTest extends Application {
 			sr.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
 			sr.setBaseSize(30);
 			
-			EdgeRenderer er = new EdgeRenderer();
+			//EdgeRenderer er = new EdgeRenderer();
 			CombinedRenderer cr = new CombinedRenderer();
-			NullRenderer nr = new NullRenderer();
+			//NullRenderer nr = new NullRenderer();
 			cr.add(sr);
 			cr.add(lr);
 			
@@ -388,17 +380,6 @@ public class GemTest extends Application {
 				}
 				
 				System.out.println("degree: " + degree);
-				
-				/*for(Label label : labels) {
-					
-					//System.out.println("root.getScale: " + root.getScaleX());
-					
-					// TODO: HASHTABLE OR SOMETHING WITH VISUALITEM/NODE AND LABEL
-					// ONLY ADJUST VISIBLE
-					
-					
-					label.setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
-				}*/
 				
 				for(Map.Entry<VisualItem, Label> entry : itemLabelMap.entrySet()) {
 			        
