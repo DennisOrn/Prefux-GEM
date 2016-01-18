@@ -48,18 +48,17 @@ import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
 	
-	private List<Vertex> nodeList = new ArrayList<>();
-	private boolean initialized = false;
-	private int nrRounds = 0;
+	private List<Vertex> nodeList	= new ArrayList<>();
+	private boolean initialized		= false;
+	private int nrRounds			= 0;
 	private int maxRounds;
-	private double globalTemp = 1024;
-	private double[] sumPos = new double[2];
+	private double globalTemp;
+	private double[] sumPos			= new double[2];
 	
 	private final double maxTemp					= 1000;
 	private final double desiredTemp				= 30;
 	private final double desiredEdgeLength			= 256;
 	private final double gravitationalConstant		= (double) 1 / 16;
-	
 	private final double oscillationOpeningAngle	= Math.PI / 4;
 	private final double rotationOpeningAngle		= Math.PI / 3;
 	private final double oscillationSensitivity		= 1.1;
@@ -69,9 +68,8 @@ public class GraphEmbedderLayout extends Layout {
 		
 		private final VisualItem item;
 		private double[] impulse = new double[2];
-		private double skew = 0;
 		private double temp = 1000;
-		
+		private double skew = 0;
 		private double[] coordinates = new double[2];
 		private List<Vertex> neighbors = new ArrayList<>();
 		
@@ -108,7 +106,7 @@ public class GraphEmbedderLayout extends Layout {
 		
 		// Place all the nodes in random positions and add them to nodeList.
 		Iterator<VisualItem> iter = m_vis.visibleItems(m_nodeGroup);
-		while (iter.hasNext()) {
+		while(iter.hasNext()) {
 			
 			VisualItem item = iter.next();
 			
@@ -138,16 +136,16 @@ public class GraphEmbedderLayout extends Layout {
 		// Make sure the neighbors are added to every node.
 		for(Vertex v : nodeList) {
 			
-			Iterator<? extends Edge> it = ((Node)v.item).edges();
+			Iterator<? extends Edge> it = ((Node) v.item).edges();
 			while(it.hasNext()) {
 				
 				Edge e = it.next();
-				VisualItem u = (VisualItem)e.getSourceNode();
+				VisualItem u = (VisualItem) e.getSourceNode();
 				
 				// Make sure u and v are not the same node.
 				
 				if(u == v.item) {
-					u = (VisualItem)e.getTargetNode();
+					u = (VisualItem) e.getTargetNode();
 				}
 				
 				for(Vertex v2 : nodeList) {
@@ -157,8 +155,6 @@ public class GraphEmbedderLayout extends Layout {
 				}
 			}
 		}
-		
-		System.out.println("Edges added to vertices.");
 		
 		maxRounds = nodeList.size() * 4;
 		System.out.println("maxRounds set to: " + maxRounds + ".");
@@ -182,10 +178,10 @@ public class GraphEmbedderLayout extends Layout {
 			init();
 		} // TODO: this if-statement might me unnecessary.
 		
-		while(globalTemp > desiredTemp && nrRounds < maxRounds) {
+		do {
 			
 			System.out.println("-------------------------------------");
-			System.out.println("ROUND " + (nrRounds + 1));
+			System.out.println("ROUND " + (++nrRounds));
 			
 			// Reset the global temperature at the start of every round.
 			globalTemp = 0;
@@ -200,25 +196,22 @@ public class GraphEmbedderLayout extends Layout {
 			globalTemp = globalTemp / nodeList.size();
 			System.out.println("Global temperature: " + globalTemp);
 			
-			++nrRounds;
-			
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
 			// Update the visualization every n rounds.
 			int n = 50;
-			if(nrRounds % n == 0 || globalTemp < desiredTemp) {
+			if(nrRounds % n == 0 || globalTemp <= desiredTemp) {
 				for(Vertex v : nodeList) {
 					v.item.setX(v.coordinates[0]);
 					v.item.setY(v.coordinates[1]);
-					
-					if(globalTemp < desiredTemp) {
-						
-						// The algorithm has finished, set fixed to true to enable
-						// the touch-functionality in prefux.controls.GemControl.
-						v.item.setFixed(true);
-					}
 				}
 			}
+		} while(globalTemp > desiredTemp && nrRounds < maxRounds);
+		
+		// When the algorithm has finished, set fixed to true to enable
+		// the touch-functionality in prefux.controls.GemControl.
+		for(Vertex v : nodeList) {
+			v.item.setFixed(true);
 		}
 	}
 	
@@ -358,6 +351,7 @@ public class GraphEmbedderLayout extends Layout {
 			v.temp = v.temp * (1 - Math.abs(v.skew));
 			v.temp = Math.min(v.temp, maxTemp);
 		}
+		
 		v.impulse = impulse;
 		
 		// Add the node's temperature to the global temperature.
