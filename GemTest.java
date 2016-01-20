@@ -98,9 +98,9 @@ public class GemTest extends Application {
 		
 		try {
 			
-			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			/*for(OntClass cls : m.listClasses().toList()) {
 				System.out.println(cls);
@@ -168,86 +168,31 @@ public class GemTest extends Application {
 			
 			
 			
-			
-			
-			
-			
-
-			// create a new default renderer factory
-			// return our name label renderer as the default for all
-			// non-EdgeItems
-			// includes straight line edges for EdgeItems by default
 			DefaultRendererFactory rfa = new DefaultRendererFactory();
-			//Predicate expMale = ExpressionParser.predicate("gender='M'");// REMOOOOOOOOOOOOOOOOOVE (?)
-			//Predicate expFemale = ExpressionParser.predicate("gender='F'");
-			//rfa.add(expMale, male);
-			//rfa.add(expFemale, female);
-			
-			/*****/
-			//Predicate visible = new VisiblePredicate();
-			//rfa.add(visible, lr);
-			
-			//Predicate pred = (Predicate)ExpressionParser.parse("childcount()==0");
-			//rfa.add(pred, lr);
-			
-			//rfa.add(new InGroupPredicate("labels"), new LabelRenderer("name"));
-			/*****/
 			
 			
 			LabelRenderer lr = new LabelRenderer("name");
-			//lr.setHorizontalAlignment(Constants.LEFT);
-			
-			//Predicate pVisible		= (Predicate)ExpressionParser.parse("VISIBLE()");
-			//Predicate pNotVisible	= (Predicate)ExpressionParser.parse("!VISIBLE()");
 			
 			ShapeRenderer sr = new ShapeRenderer();
 			sr.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
 			sr.setBaseSize(30);
 			
-			//EdgeRenderer er = new EdgeRenderer();
 			CombinedRenderer cr = new CombinedRenderer();
-			//NullRenderer nr = new NullRenderer();
+			
 			cr.add(sr);
 			cr.add(lr);
 			
-			//rfa.add(pVisible, cr);
-			//rfa.add(pVisible, er);
-			
-			
-			//rfa.add(pVisible, sr);
-			//rfa.add(pVisible, er);
-			//vis.setVisible("graph.nodes", null, false);
-			//vis.setVisible("graph.edges", null, false);
-			
-			//vis.addDecorators("labels", "graph.nodes", pVisible, LABEL_SCHEMA);
-			
-			//rfa.add(pVisible, er);
 			rfa.setDefaultRenderer(cr);
-			//rfa.setDefaultEdgeRenderer(er);
+			
 			ArrowRenderer arrowRenderer = new ArrowRenderer();
 			rfa.setDefaultEdgeRenderer(arrowRenderer);
+			//rfa.setDefaultEdgeRenderer(new EdgeRenderer());
 			
-			//rfa.setDefaultEdgeRenderer(er);
-			
-			//rfa.add(new InGroupPredicate("NODE_DECORATORS"), lr);
-			
-			//vis.setRendererFactory(rfa);
 			vis.setRendererFactory(rfa);
 			
-			//DECORATOR_SCHEMA.setDefault(VisualItem.TEXTCOLOR, ColorLib.gray(128));
-	        //vis.addDecorators("NODE_DECORATORS", "graph.nodes", DECORATOR_SCHEMA);
-			
-
-			//ActionList layout = new ActionList(Activity.INFINITY, 30);
 			ActionList layout = new ActionList(Activity.INFINITY, 0);
 			GraphEmbedderLayout algo = new GraphEmbedderLayout("graph");
 			layout.add(algo);
-			
-			/*****/
-			
-			//layout.add(new LabelLayout2("NODE_DECORATORS"));
-			
-			/*****/
 			
 			layout.add(new RepaintAction());
 			
@@ -297,7 +242,7 @@ public class GemTest extends Application {
 			
 			
 			/* Mouse */
-			class Delta { double x, y; }
+			/*class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
 			root.setOnMouseMoved(event -> {
@@ -310,7 +255,7 @@ public class GemTest extends Application {
 				display.setLayoutX(event.getX() + dragDelta.x);
 				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
-			});
+			});*/
 			/* Mouse */
 			
 			
@@ -352,8 +297,9 @@ public class GemTest extends Application {
 	        });
 			
 			root.setOnZoom(event -> {
-				root.setScaleX(startScale * event.getTotalZoomFactor());
-				root.setScaleY(startScale * event.getTotalZoomFactor());
+				double totalZoomFactor = event.getTotalZoomFactor();
+				root.setScaleX(startScale * totalZoomFactor);
+				root.setScaleY(startScale * totalZoomFactor);
 				event.consume();
 	        });
 			
@@ -468,15 +414,15 @@ public class GemTest extends Application {
 		while(iterator.hasNext()) {
 			
 			VisualItem item = (VisualItem) iterator.next();
-			System.out.println(item.getNode());
+			//System.out.println(item.getNode());
 			if(item.getNode() instanceof Group) {
 				
 				Group group = (Group) item.getNode();
 				ObservableList<javafx.scene.Node> groupList = group.getChildren();
 				for(javafx.scene.Node groupChild : groupList) {
 					
-					System.out.print("    ");
-					System.out.println(groupChild);
+					//System.out.print("    ");
+					//System.out.println(groupChild);
 					if(groupChild instanceof Circle) {
 						
 						Circle circle = (Circle) groupChild;
@@ -493,8 +439,8 @@ public class GemTest extends Application {
 						ObservableList<javafx.scene.Node> stackList = stack.getChildren();
 						for(javafx.scene.Node stackChild : stackList) {
 							
-							System.out.print("        ");
-							System.out.println(stackChild);
+							//System.out.print("        ");
+							//System.out.println(stackChild);
 							if(stackChild instanceof Label) {
 								
 								Label label = (Label) stackChild;

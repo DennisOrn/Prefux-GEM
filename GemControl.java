@@ -106,8 +106,8 @@ public class GemControl extends ControlAdapter {
 						hideChildren(node);
 						
 						// Hide the "outgoing" edges.
-						List<Line> lines = getLines(node);
-						for(Line line : lines) {
+						List<javafx.scene.Node> lines = getLines(node);
+						for(javafx.scene.Node line : lines) {
 							line.setVisible(false);
 						}
 						
@@ -125,8 +125,8 @@ public class GemControl extends ControlAdapter {
 			    		showChildren(node);
 			    		
 			    		// Show the "outgoing" edges.
-			    		List<Line> lines = getLines(node);
-						for(Line line : lines) {
+			    		List<javafx.scene.Node> lines = getLines(node);
+						for(javafx.scene.Node line : lines) {
 							line.setVisible(true);
 						}
 			    		
@@ -191,8 +191,8 @@ public class GemControl extends ControlAdapter {
 			}
 			
 			// Hide the lines
-			List<Line> lines = getLines(child);
-			for(Line line : lines) {
+			List<javafx.scene.Node> lines = getLines(child);
+			for(javafx.scene.Node line : lines) {
 				line.setVisible(false);
 			}
 			
@@ -229,8 +229,8 @@ public class GemControl extends ControlAdapter {
 			}*/
 			
 			// Show the lines
-			List<Line> lines = getLines(child);
-			for(Line line : lines) {
+			List<javafx.scene.Node> lines = getLines(child);
+			for(javafx.scene.Node line : lines) {
 				line.setVisible(true);
 			}
 			
@@ -297,9 +297,9 @@ public class GemControl extends ControlAdapter {
      * Returns a list with all the "outgoing" lines that are
      * connected to the node that is passed to the method.
      */
-    private List<Line> getLines(Node node) {
+    private List<javafx.scene.Node> getLines(Node node) {
     	
-    	List<Line> lines = new ArrayList<>();
+    	List<javafx.scene.Node> lines = new ArrayList<>();
     	Iterator<? extends Edge> it = node.outEdges();
     	while(it.hasNext()) {
     		
@@ -309,6 +309,16 @@ public class GemControl extends ControlAdapter {
     			
     			Line line = (Line) item.getNode();
 				lines.add(line);
+    		}
+    		
+    		else if(item.getNode() instanceof Group) {
+    			
+    			Group group = (Group) item.getNode();
+    			ObservableList<javafx.scene.Node> groupList = group.getChildren();
+    			for(javafx.scene.Node groupChild : groupList) {
+    				
+    				lines.add(groupChild);
+    			}
     		}
     	}
     	
