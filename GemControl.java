@@ -55,18 +55,23 @@ public class GemControl extends ControlAdapter {
 		// Handle event only if algorithm has finished.
 		if(item.isFixed()) {
 			
+			// If an item is being pressed.
 			if(e.getEventType() == TouchEvent.TOUCH_PRESSED && item instanceof NodeItem) {
 				startTime = System.nanoTime();
 				selected = item.isHighlighted() ? true : false;
 			}
 			
+			// If an item is pressed and held.
 			else if(e.getEventType() == TouchEvent.TOUCH_STATIONARY && item instanceof NodeItem) {
-				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
 				
+				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
 				if(elapsedTime > 500 && touchedItem != item ) {
 					
-					touchedItem = item; // To prevent the if-statement above to be true over and over again.
-					if(!selected) { // Select the item.
+					// To prevent the if-statement above to be true over and over again.
+					touchedItem = item;
+					
+					// If the item is not selected: select it.
+					if(!selected) {
 						
 						selectedItems.add(item);
 						item.setHighlighted(true);
@@ -77,12 +82,15 @@ public class GemControl extends ControlAdapter {
 							circle.setStrokeWidth(SELECTED_STROKE_WIDTH);
 						}
 						
-					} else { // Deselect the item.
+					}
+					
+					// If the item is already selected: deselect it.
+					else {
 						
 						selectedItems.remove(item);
 						item.setHighlighted(false);
 						
-						// Change the stroke-width to indicate that the item no longer selected.
+						// Change the stroke-width to indicate that the item is no longer selected.
 						Circle circle = getCircle((Node) item);
 						if(circle != null) {
 							circle.setStrokeWidth(NORMAL_STROKE_WIDTH);
@@ -93,14 +101,14 @@ public class GemControl extends ControlAdapter {
 				}
 			}
 			
-			// TODO: DESELECT EVEYTHING WHEN DOUBLE TAPPING???
-			
+			// If an item is released.
 			else if(e.getEventType() == TouchEvent.TOUCH_RELEASED && item instanceof NodeItem) {
 				
 				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
 				if(elapsedTime < 500) {
 					
-					if(item.isExpanded()) { // Collapse
+					// If the item is expanded: collapse it.
+					if(item.isExpanded()) {
 						
 						Node node = (Node) item;
 						hideChildren(node);
@@ -119,7 +127,10 @@ public class GemControl extends ControlAdapter {
 						
 						item.setExpanded(false);
 						
-					} else { // Expand
+					}
+					
+					// If the item is collapsed: expand it.
+					else {
 						
 						Node node = (Node) item;
 			    		showChildren(node);
@@ -143,6 +154,7 @@ public class GemControl extends ControlAdapter {
 				touchedItem = null;
 			}
 			
+			// If an item is pressed and moved.
 			else if(e.getEventType() == TouchEvent.TOUCH_MOVED && item instanceof NodeItem) {
 				
 				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
@@ -175,22 +187,22 @@ public class GemControl extends ControlAdapter {
 			
 			Node child = it.next();
 			
-			// Recursive method-call
+			// Recursive method-call.
 			hideChildren(child);
 			
-			// Hide the circle
+			// Hide the circle.
 			Circle circle = getCircle(child);
 			if(circle != null) {
 				circle.setVisible(false);
 			}
 			
-			// Hide the label
+			// Hide the label.
 			Label label = getLabel(child);
 			if(label != null) {
 				label.setVisible(false);
 			}
 			
-			// Hide the lines
+			// Hide the lines.
 			List<javafx.scene.Node> lines = getLines(child);
 			for(javafx.scene.Node line : lines) {
 				line.setVisible(false);
@@ -220,13 +232,6 @@ public class GemControl extends ControlAdapter {
 				circle.setVisible(true);
 				circle.setFill(NORMAL_COLOR);
 			}
-			
-			// Show label
-			/*Label label = getLabel(child);
-			if(label != null) {
-				//if(label.isVisible())//////////////////////////// TODO: WHAT
-				label.setVisible(true);
-			}*/
 			
 			// Show the lines
 			List<javafx.scene.Node> lines = getLines(child);
@@ -272,6 +277,7 @@ public class GemControl extends ControlAdapter {
     	
 	    VisualItem item = (VisualItem) node;
 		if(item.getNode() instanceof Group) {
+			
 			Group group = (Group) item.getNode();
 			ObservableList<javafx.scene.Node> groupList = group.getChildren();
 			for(javafx.scene.Node groupChild : groupList) {

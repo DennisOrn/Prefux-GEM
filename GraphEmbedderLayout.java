@@ -48,29 +48,71 @@ import prefux.visual.VisualItem;
 
 public class GraphEmbedderLayout extends Layout {
 	
-	private List<Vertex> nodeList	= new ArrayList<>();
-	private boolean initialized		= false;
-	private int nrRounds			= 0;
-	private int maxRounds;
-	private double globalTemp;
-	private double[] sumPos			= new double[2];
+	// List containing all the nodes.
+	private List<Vertex> nodeList = new ArrayList<>();
 	
-	private final double maxTemp					= 1000;
-	private final double desiredTemp				= 30;
-	private final double desiredEdgeLength			= 256;
-	private final double gravitationalConstant		= (double) 1 / 16;
-	private final double oscillationOpeningAngle	= Math.PI / 4;
-	private final double rotationOpeningAngle		= Math.PI / 3;
-	private final double oscillationSensitivity		= 1.1;
+	// Indicates if the algorithm has been initialized.
+	private boolean initialized = false;
+	
+	// Current number of rounds.
+	private int nrRounds = 0;
+	
+	// Maximum number of rounds allowed.
+	private int maxRounds;
+	
+	// How often we want the visualization to update.
+	// If set to 1: visualization will be updated after every round.
+	// The visualization will always be updated when algorithm finishes,
+	// no matter what this constant is set to.
+	// WARNING: do not set this to zero!
+	private final int updateFrequency = 9999;
+	
+	// The global temperature.
+	private double globalTemp;
+	
+	// The sum of the coordinates for all the nodes. This is
+	// used to calculate the location of the barycenter.
+	private double[] sumPos = new double[2];
+	
+	
+	// The maximal temperature a node is allowed to have.
+	private final double maxTemp = 1000;
+	
+	// The desired global temperature.
+	private final double desiredTemp = 50;
+	
+	// The desired length of the edges.
+	private final double desiredEdgeLength = 256;
+	
+	// The gravitational constant.
+	private final double gravitationalConstant = (double) 1 / 16;
+	
+	// The opening angles for oscillation- and rotation-detection.
+	private final double oscillationOpeningAngle = Math.PI / 4;
+	private final double rotationOpeningAngle = Math.PI / 3;
+	
+	// The sensitivity for correcting oscillations and rotations.
+	private final double oscillationSensitivity = 1.1;
 	private double rotationSensitivity; // will be set in init()
 	
 	private class Vertex {
 		
+		// The corresponding visual item.
 		private final VisualItem item;
+		
+		// The impulse vector.
 		private double[] impulse = new double[2];
+		
+		// The temperature.
 		private double temp = 1000;
+		
+		// The skew.
 		private double skew = 0;
+		
+		// The current coordinates.
 		private double[] coordinates = new double[2];
+		
+		// List containing the neighbors.
 		private List<Vertex> neighbors = new ArrayList<>();
 		
 		private Vertex(VisualItem item) {
@@ -126,9 +168,6 @@ public class GraphEmbedderLayout extends Layout {
 			v.coordinates[1] = item.getY();
 			
 			nodeList.add(v);
-			
-			//item.setSize(item.getSize() * 3);
-			//item.setSize(0);
 		}
 		
 		System.out.println("Nodes added to list: " + nodeList.size() + ".");
@@ -143,7 +182,6 @@ public class GraphEmbedderLayout extends Layout {
 				VisualItem u = (VisualItem) e.getSourceNode();
 				
 				// Make sure u and v are not the same node.
-				
 				if(u == v.item) {
 					u = (VisualItem) e.getTargetNode();
 				}
@@ -176,7 +214,7 @@ public class GraphEmbedderLayout extends Layout {
 		
 		if(!initialized) {
 			init();
-		} // TODO: this if-statement might me unnecessary.
+		} // TODO: this if-statement might be unnecessary at the moment.
 		
 		do {
 			
@@ -189,18 +227,23 @@ public class GraphEmbedderLayout extends Layout {
 			// Shuffle the list before every iteration.
 			Collections.shuffle(nodeList);
 			for(Vertex v : nodeList) {
+				
+				// Calculate the impulse. 
 				double[] imp = calculateImpulse(v);
+				
+				// Use the impulse to calculate the temperature and move the node.
 				calculateTemperature(v, imp);
 			}
 			
+			// Calculate the average temperature.
 			globalTemp = globalTemp / nodeList.size();
-			System.out.println("Global temperature: " + globalTemp);
 			
+			System.out.println("Global temperature: " + globalTemp);
 			System.out.println("Time elapsed: " + (System.nanoTime() - startTime) / 1000000000 + "s");
 			
-			// Update the visualization every n rounds.
-			int n = 50;
-			if(nrRounds % n == 0 || globalTemp <= desiredTemp) {
+			// Update the visualization, or not.
+			if(nrRounds % updateFrequency == 0 || globalTemp <= desiredTemp) {
+				System.out.println("Updating visualization...");
 				for(Vertex v : nodeList) {
 					v.item.setX(v.coordinates[0]);
 					v.item.setY(v.coordinates[1]);
@@ -215,12 +258,17 @@ public class GraphEmbedderLayout extends Layout {
 		}
 	}
 	
+    /**
+     * Calculates the scaling factor.
+     * @param v the vertex for which we want the scaling factor
+     * @return the scaling factor
+     */
 	private double calculateScalingFactor(Vertex v) {
 		return 1 + v.neighbors.size() / 2;
 	}
 	
     /**
-     * Calculates the barycenter, or the center of mass).
+     * Calculates the barycenter, or the center of mass.
      * @return the coordinates for the barycenter
      */
 	private double[] calculateBarycenter() {
@@ -245,6 +293,7 @@ public class GraphEmbedderLayout extends Layout {
 		impulse[0] = impulse[0] - v.coordinates[0];
 		impulse[1] = impulse[1] - v.coordinates[1];
 		
+		// Apply scaling factor.
 		double scalingFactor = calculateScalingFactor(v);
 		impulse[0] = impulse[0] * gravitationalConstant * scalingFactor;
 		impulse[1] = impulse[1] * gravitationalConstant * scalingFactor;
@@ -317,7 +366,7 @@ public class GraphEmbedderLayout extends Layout {
 			v.coordinates[0] += impulse[0];
 			v.coordinates[1] += impulse[1];
 			
-			// Update the sum of all node-coordinates (used for calculating the barycenter)
+			// Update the sum of all node-coordinates (used for calculating the barycenter).
 			sumPos[0] += impulse[0];
 			sumPos[1] += impulse[1];
 		}

@@ -44,22 +44,11 @@ import prefux.data.util.Point2D;
 import prefux.visual.EdgeItem;
 import prefux.visual.VisualItem;
 
-/**
- * <p>
- * Renderer that draws edges as lines connecting nodes. Both straight and curved
- * lines are supported. Curved lines are drawn using cubic Bezier curves.
- * Subclasses can override the
- * {@link #getCurveControlPoints(EdgeItem, Point2D[], double, double, double, double)}
- * method to provide custom control point assignment for such curves.
- * </p>
- *
- * <p>
- * This class also supports arrows for directed edges. See the
- * {@link #setArrowType(int)} method for more.
- * </p>
- *
- * @version 1.0
- * @author <a href="http://jheer.org">jeffrey heer</a>
+/*
+ * Renderer that draws edges as lines with arrows. The raw shape is
+ * a Group that consists of one Line and one Polygon. When a node
+ * changes location, the arrowheads of all the edges that are connected
+ * to it will be adjusted.
  */
 public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 

@@ -8,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.stage.Stage;
@@ -16,8 +15,6 @@ import prefux.FxDisplay;
 import prefux.Visualization;
 import prefux.action.ActionList;
 import prefux.action.RepaintAction;
-import prefux.action.assignment.ColorAction;
-import prefux.action.assignment.NodeDegreeSizeAction;
 import prefux.action.layout.graph.GraphEmbedderLayout;
 import prefux.activity.Activity;
 import prefux.controls.GemControl;
@@ -29,12 +26,8 @@ import prefux.data.util.Point2D;
 import prefux.render.ArrowRenderer;
 import prefux.render.CombinedRenderer;
 import prefux.render.DefaultRendererFactory;
-import prefux.render.EdgeRenderer;
 import prefux.render.LabelRenderer;
-import prefux.render.NullRenderer;
 import prefux.render.ShapeRenderer;
-import prefux.util.ColorLib;
-import prefux.util.PrefuseLib;
 import prefux.visual.VisualItem;
 import prefux.visual.VisualTupleSet;
 
@@ -59,14 +52,26 @@ public class GemTest extends Application {
 	private static final double HEIGHT = 720;
 	private static final String GROUP = "graph";
 	
+	// Table containing all the nodes.
 	Table nodeTable = new Table();
+	
+	// Table containing all the edges.
 	Table edgeTable = new Table();
+	
+	// List containing the OntClasses read from the ontology-file.
 	List<OntClass> ontList = new ArrayList<>();
 	
+	// Map containing items and their labels.
+	// Used to display the correct labels after zooming.
 	private HashMap<VisualItem, Label> itemLabelMap = new HashMap<>();
-	private double labelSize = 12;
-	private double labelSizeAdjusted; // Adjusts when the user zooms in and out
 	
+	// The size of the labels.
+	private double labelSize = 12;
+	
+	// The size of the labels when scaled to the zoom factor.
+	private double labelSizeAdjusted;
+	
+	// Variables used for the touch-functionality, zooming and rotating.
 	private double startScale, startRotate;
     private boolean moveInProgress = false;
     private int touchPointId;
@@ -78,14 +83,11 @@ public class GemTest extends Application {
 		primaryStage.setTitle("GEM");
 		Pane root = new Pane();
 		
+		// Zoom out to fit the whole initial graph on the screen.
 		root.setScaleX(0.05);
         root.setScaleY(0.05);
-		//root.setScaleX(0.30);
-        //root.setScaleY(0.30);
         
-        /*****/
         labelSizeAdjusted = labelSize / root.getScaleX();
-        /*****/
 		
 		root.setStyle("-fx-background-color: white;");
 		primaryStage.setScene(new Scene(root, WIDTH, HEIGHT));
@@ -93,36 +95,36 @@ public class GemTest extends Application {
 		primaryStage.show();
 
 		Graph graph = null;
-		
 		OntModel m = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, null);
 		
 		try {
 			
-			m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			// Read a specified ontology-file.
+			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
-			/*for(OntClass cls : m.listClasses().toList()) {
-				System.out.println(cls);
-			}*/
-			//System.out.println(m.size());
-			
+			// Create an iterator for iterating over the ontology.
 			Iterator<OntClass> it = m.listHierarchyRootClasses().filterDrop(new Filter<OntClass>() {
 				public boolean accept(OntClass o) {
 					return o.isAnon();
 				}
 			});
 
+			// Add a column to nodeTable containing the name.
 			nodeTable.addColumn("name", String.class);
 			
+			// Add two columns to edgeTable containing the source and target for all the edges.
 			edgeTable.addColumn("source", int.class);
 			edgeTable.addColumn("target", int.class);
 			
+			// Add all the ontology-entries to ontList.
 			while(it.hasNext()) {
 				OntClass cls = it.next();
 				showClass(cls, new ArrayList<OntClass>(), 0);
 			}
 			
+			// Add all the entries in ontList to the tables.
 			for(int i = 0; i < ontList.size(); ++i) {
 				
 				OntClass cls = ontList.get(i);
@@ -130,6 +132,7 @@ public class GemTest extends Application {
 				nodeTable.set(index, 0, cls.getLocalName());
 				
 				for(it = cls.listSubClasses(true); it.hasNext();) {
+					
 					OntClass sub = it.next();
 					index = edgeTable.addRow();
 					edgeTable.set(index, 0, i);
@@ -137,29 +140,20 @@ public class GemTest extends Application {
 				}
 			}
 			
-			
-			System.out.println("DONE");
 			System.out.println("ontList.size(): " + ontList.size());
-			System.out.println("nodeTable: " + nodeTable);
-			System.out.println("edgeTable: " + edgeTable);
 			
-			
-			
+			// Create a new graph using the two tables.
 			graph = new Graph(nodeTable, edgeTable, false); // TRUE?
 			
-			
-			// graph = new GraphMLReader().readGraph("data/graphml-sample.xml");
-			//graph = new GraphMLReader().readGraph("data/socialnet2.xml");
-			
-			
+			// Create the visualization and add the graph.
 			Visualization vis = new Visualization();
 			vis.add(GROUP, graph);
 
-			ShapeRenderer female = new ShapeRenderer();
+			/*ShapeRenderer female = new ShapeRenderer();
 			female.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
 			//LabelRenderer lr = new LabelRenderer("name");
 			ShapeRenderer male = new ShapeRenderer();
-			male.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
+			male.setFillMode(ShapeRenderer.GRADIENT_SPHERE);*/
 			
 			
 			
@@ -167,18 +161,14 @@ public class GemTest extends Application {
 			
 			
 			
-			
+			// Create the renderers.
 			DefaultRendererFactory rfa = new DefaultRendererFactory();
-			
-			
 			LabelRenderer lr = new LabelRenderer("name");
-			
 			ShapeRenderer sr = new ShapeRenderer();
 			sr.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
 			sr.setBaseSize(30);
 			
 			CombinedRenderer cr = new CombinedRenderer();
-			
 			cr.add(sr);
 			cr.add(lr);
 			
@@ -186,47 +176,36 @@ public class GemTest extends Application {
 			
 			ArrowRenderer arrowRenderer = new ArrowRenderer();
 			rfa.setDefaultEdgeRenderer(arrowRenderer);
+			
+			// The line below uses the original edge-renderer instead of the custom arrow-renderer.
+			// The interaction is smoother with the edge-renderer since it is simpler.
 			//rfa.setDefaultEdgeRenderer(new EdgeRenderer());
 			
 			vis.setRendererFactory(rfa);
 			
+			// Create a list of actions for the layout.
 			ActionList layout = new ActionList(Activity.INFINITY, 0);
+			
+			// Add the algorithm.
 			GraphEmbedderLayout algo = new GraphEmbedderLayout("graph");
 			layout.add(algo);
-			
 			layout.add(new RepaintAction());
 			
 			vis.putAction("layout", layout);
 			
-			ActionList nodeActions = new ActionList();
-			final String NODES = PrefuseLib.getGroupName(GROUP, Graph.NODES);
-			NodeDegreeSizeAction size = new NodeDegreeSizeAction(NODES);
-			nodeActions.add(size);
-			
-			//DataColorAction color = new DataColorAction(NODES, "name", Constants.NOMINAL, VisualItem.FILLCOLOR, palette);
-			//nodeActions.add(color);
-			
-			/*****/
-			
-			ColorAction nodeColor = new ColorAction("graph.nodes", VisualItem.FILLCOLOR, ColorLib.rgb(72, 61, 139));
-			nodeActions.add(nodeColor);
-			
-			ColorAction textColor = new ColorAction("graph.nodes", VisualItem.TEXTCOLOR, ColorLib.rgb(0, 255, 255));
-			nodeActions.add(textColor);
-			
-			/*****/
-			
-			vis.putAction("nodes", nodeActions);
-			
+			// Create the display and add the visualization.
 			FxDisplay display = new FxDisplay(vis);
 			
+			// Add the touch-functionality from GemControl to the display.
 			display.addControlListener(new GemControl());
 			
+			// Initialize all the nodes to set their colors and visibilities.
 			initializeNodes(vis.getVisualGroup("graph"));
 			
+			// Add the display to the root-pane.
 			root.getChildren().add(display);
 			
-			vis.run("nodes");
+			// Run the list of actions.
 			vis.run("layout");
 			
 			
@@ -239,9 +218,7 @@ public class GemTest extends Application {
 			 * / expanding is located in prefux.controls.GemControl.
 			 */
 			
-			
-			
-			/* Mouse */
+			/* MOUSE */
 			/*class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
@@ -256,9 +233,7 @@ public class GemTest extends Application {
 				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
 			});*/
-			/* Mouse */
-			
-			
+			/* END OF MOUSE */
 			
 			root.setOnTouchPressed(event -> {
 				if(moveInProgress == false) {
@@ -310,9 +285,7 @@ public class GemTest extends Application {
 				int degree;
 				double scale = root.getScaleX();
 				
-				System.out.println("-------------------------");
-				System.out.println("scale: " + scale);
-				
+				// Sets the degree of visibility based on the scale of root.
 				if(scale <= 0.05) {
 					degree = 10;
 				} else if(scale > 0.05 && scale <= 0.1) {
@@ -325,10 +298,9 @@ public class GemTest extends Application {
 					degree = 0;
 				}
 				
-				System.out.println("degree: " + degree);
-				
 				for(Map.Entry<VisualItem, Label> entry : itemLabelMap.entrySet()) {
-			        
+			    
+					// If a node has an equal or higher degree, its label will be visible.
 					Node node = (Node) entry.getKey();
 					if(node.getDegree() >= degree) {
 						entry.getValue().setManaged(true);
@@ -343,64 +315,55 @@ public class GemTest extends Application {
 				event.consume();
 	        });
 	        
-			root.setOnRotationStarted(event -> {
+			// NOTE: the rotation-functionality is very slow with big graphs, it is commented below.
+			
+			/*root.setOnRotationStarted(event -> {
 				startRotate = root.getRotate();
 				event.consume();
 	        });
 			
 			root.setOnRotate(event -> {
-				//root.setRotate(startRotate + event.getTotalAngle());
-				
-				/*
-					Rotating labels in real-time.
-					Move loop to root.setOnRotationFinished() to rotate
-					labels only when graph-rotation is finished.
-				*/
-				/*for(Label label : labels) {
-					label.setRotate(0 - root.getRotate());
-				}*/
-				
+				root.setRotate(startRotate + event.getTotalAngle());
 				event.consume();
 	        });
 			
 			root.setOnRotationFinished(event -> {
-				// TODO: only rotate visible labels?
-				/*for(Label label : labels) {
+				
+				// Move the loop below to root.setOnRotate() to make the text
+				// rotate in real time as the graph rotates.
+				// NOTE: The bigger the graph, the slower this becomes.
+				for(Map.Entry<VisualItem, Label> entry : itemLabelMap.entrySet()) {
+					
+					Label label = (Label) entry.getValue();
 					label.setRotate(0 - root.getRotate());
-				}*/
-				// TODO: rotation offsets the label, NOT GOOD! It rotates around the center of the label (?)
+				}
+				
 				event.consume();
-	        });
+	        });*/
 			
-			/******************** TOUCH-FUNCTIONALITY ********************/
+			/***************** END OF TOUCH-FUNCTIONALITY ****************/
 		}
-		/*catch (DataIOException e) {
-			e.printStackTrace();
-			System.err.println("Error loading graph. Exiting...");
-			System.exit(1);
-		}*/
-		catch (com.hp.hpl.jena.shared.WrappedIOException e) {
-			if (e.getCause() instanceof java.io.FileNotFoundException) {
-				System.err.println("A java.io.FileNotFoundException caught: " 
-						+ e.getCause().getMessage());
+		catch(com.hp.hpl.jena.shared.WrappedIOException e) {
+			if(e.getCause() instanceof java.io.FileNotFoundException) {
+				System.err.println("A java.io.FileNotFoundException caught: " + e.getCause().getMessage());
 			}
 		}
 	}
 	
 	private void showClass(OntClass cls, List<OntClass> occurs, int depth) {
-		//renderClassDescription(cls, depth);
-		//System.out.println();
 		
 		if(!ontList.contains(cls)) {
 			ontList.add(cls);
 		}
 		
-		// recurse to the next level down
-		if (cls.canAs(OntClass.class) && !occurs.contains(cls)) {
-			for (Iterator<OntClass> i = cls.listSubClasses(true); i.hasNext();) {
+		// Recurse to the next level.
+		if(cls.canAs(OntClass.class) && !occurs.contains(cls)) {
+			
+			for(Iterator<OntClass> i = cls.listSubClasses(true); i.hasNext();) {
+				
 				OntClass sub = i.next();
 				
-				// we push this expression on the occurs list before we recurse
+				// This expression is added to occurs before recursion.
 				occurs.add(cls);
 				showClass(sub, occurs, depth + 1);
 				occurs.remove(cls);
@@ -408,60 +371,57 @@ public class GemTest extends Application {
 		}
 	}
 	
+    /**
+     * Initializes and modifies the looks of the nodes based on some criteria.
+     * @param visualTupleSet the tuple set containing the visual items to be modified
+     */
 	private void initializeNodes(VisualTupleSet visualTupleSet) {
 		
 		Iterator<? extends Tuple> iterator = visualTupleSet.tuples();
+		
+		// Iterate over all the items.
 		while(iterator.hasNext()) {
 			
 			VisualItem item = (VisualItem) iterator.next();
-			//System.out.println(item.getNode());
-			if(item.getNode() instanceof Group) {
+			Group group = (Group) item.getNode();
+			ObservableList<javafx.scene.Node> groupList = group.getChildren();
+			
+			// Iterate over the group's children.
+			for(javafx.scene.Node groupChild : groupList) {
 				
-				Group group = (Group) item.getNode();
-				ObservableList<javafx.scene.Node> groupList = group.getChildren();
-				for(javafx.scene.Node groupChild : groupList) {
+				// If the child is a circle, modify it.
+				if(groupChild instanceof Circle) {
 					
-					//System.out.print("    ");
-					//System.out.println(groupChild);
-					if(groupChild instanceof Circle) {
+					Circle circle = (Circle) groupChild;
+					circle.setFill(javafx.scene.paint.Color.DEEPSKYBLUE);
+					circle.setStroke(javafx.scene.paint.Color.BLACK);
+					circle.setStrokeWidth(3);
+					
+				} 
+				
+				// If the child is a StackPane, one of its children is the label.
+				else if(groupChild instanceof StackPane) {
+					
+					StackPane stack = (StackPane) groupChild;
+					ObservableList<javafx.scene.Node> stackList = stack.getChildren();
+					for(javafx.scene.Node stackChild : stackList) {
 						
-						Circle circle = (Circle) groupChild;
-						circle.setFill(javafx.scene.paint.Color.DEEPSKYBLUE);
-						circle.setStroke(javafx.scene.paint.Color.BLACK);
-						circle.setStrokeWidth(3);
-						//circle.setVisible(false);
-						//circle.setRadius(80);
-						// TODO: set the size of the nodes according to the degree.
-						
-					} else if(groupChild instanceof StackPane) {
-						
-						StackPane stack = (StackPane) groupChild;
-						ObservableList<javafx.scene.Node> stackList = stack.getChildren();
-						for(javafx.scene.Node stackChild : stackList) {
+						// If the child is a label, modify it.
+						if(stackChild instanceof Label) {
 							
-							//System.out.print("        ");
-							//System.out.println(stackChild);
-							if(stackChild instanceof Label) {
-								
-								Label label = (Label) stackChild;
-								//label.setFont(new Font(labelSizeAdjusted));
-								label.setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
-								
-								if(((prefux.data.Node) item).getDegree() < 10) {
-									
-									label.setManaged(false);
-									label.setVisible(false);
-									//label.setFont(new Font(0));
-									// TODO: COLLAPSE AND HIDE CHILDREN AS WELL?
-								}
-								
-								itemLabelMap.put(item, label);
+							Label label = (Label) stackChild;
+							label.setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
+							
+							// Set the labels visibility based on its degree.
+							if(((prefux.data.Node) item).getDegree() < 10) {
+								label.setManaged(false);
+								label.setVisible(false);
 							}
+							
+							itemLabelMap.put(item, label);
 						}
 					}
 				}
-			} else if(item.getNode() instanceof Line) {
-				// TODO: do something with the lines?
 			}
 		}
 	}
