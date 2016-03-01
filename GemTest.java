@@ -148,18 +148,6 @@ public class GemTest extends Application {
 			// Create the visualization and add the graph.
 			Visualization vis = new Visualization();
 			vis.add(GROUP, graph);
-
-			/*ShapeRenderer female = new ShapeRenderer();
-			female.setFillMode(ShapeRenderer.GRADIENT_SPHERE);
-			//LabelRenderer lr = new LabelRenderer("name");
-			ShapeRenderer male = new ShapeRenderer();
-			male.setFillMode(ShapeRenderer.GRADIENT_SPHERE);*/
-			
-			
-			
-			
-			
-			
 			
 			// Create the renderers.
 			DefaultRendererFactory rfa = new DefaultRendererFactory();
