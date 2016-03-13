@@ -224,7 +224,7 @@ public class GemTest extends Application {
 			/* END OF MOUSE */
 			
 			root.setOnTouchPressed(event -> {
-				if(moveInProgress == false) {
+				if(!moveInProgress) {
 					moveInProgress = true;
 					touchPointId = event.getTouchPoint().getId();
 					prevPos = new Point2D(event.getTouchPoint().getX(), event.getTouchPoint().getY());
@@ -233,7 +233,7 @@ public class GemTest extends Application {
 	        });
 			
 			root.setOnTouchMoved(event -> {
-				if(moveInProgress == true && event.getTouchPoint().getId() == touchPointId) {
+				if(moveInProgress && event.getTouchPoint().getId() == touchPointId) {
 					Point2D currPos = new Point2D(event.getTouchPoint().getX(), event.getTouchPoint().getY());
 					double[] translationVector = new double[2];
 					
