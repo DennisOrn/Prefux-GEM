@@ -17,7 +17,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import prefux.action.Action;
-import prefux.action.layout.graph.GraphEmbedderLayout2;
 import prefux.data.Edge;
 import prefux.data.Node;
 import prefux.visual.NodeItem;
@@ -58,8 +57,7 @@ public class GemControl2 extends ControlAdapter {
 		if(item.isFixed()) {
 			
 			// If an item is being pressed.
-			//if(e.getEventType() == TouchEvent.TOUCH_PRESSED && item instanceof NodeItem) {
-			if(e.getEventType() == MouseEvent.MOUSE_PRESSED && item instanceof NodeItem) {
+			if(e.getEventType() == TouchEvent.TOUCH_PRESSED && item instanceof NodeItem) {
 				startTime = System.nanoTime();
 				selected = item.isHighlighted() ? true : false;
 			}
@@ -105,8 +103,7 @@ public class GemControl2 extends ControlAdapter {
 			}
 			
 			// If an item is released.
-			//else if(e.getEventType() == TouchEvent.TOUCH_RELEASED && item instanceof NodeItem) {
-			else if(e.getEventType() == MouseEvent.MOUSE_RELEASED && item instanceof NodeItem) {
+			else if(e.getEventType() == TouchEvent.TOUCH_RELEASED && item instanceof NodeItem) {
 				
 				long elapsedTime = (System.nanoTime() - startTime) / 1000000; // Milliseconds
 				if(elapsedTime < 500) {
@@ -153,10 +150,7 @@ public class GemControl2 extends ControlAdapter {
 			    		
 						item.setExpanded(true);
 						
-						
-						
-						
-						//item.setFixed(false);
+						// Run the algorithm again
 						Action action = item.getVisualization().getAction("layout");
 						action.run();
 					}

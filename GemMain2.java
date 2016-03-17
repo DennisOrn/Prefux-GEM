@@ -106,8 +106,8 @@ public class GemMain2 extends Application {
 			
 			// Read a specified ontology-file.
 			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			// Create an iterator for iterating over the ontology.
 			Iterator<OntClass> it = m.listHierarchyRootClasses().filterDrop(new Filter<OntClass>() {
@@ -230,7 +230,7 @@ public class GemMain2 extends Application {
 			 */
 			
 			/* MOUSE */
-			class Delta { double x, y; }
+			/*class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
 			root.setOnMouseMoved(event -> {
@@ -243,7 +243,7 @@ public class GemMain2 extends Application {
 				display.setLayoutX(event.getX() + dragDelta.x);
 				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
-			});
+			});*/
 			/* END OF MOUSE */
 			
 			root.setOnTouchPressed(event -> {
