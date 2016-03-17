@@ -79,7 +79,7 @@ public class GraphEmbedderLayout extends Layout {
 	private final double maxTemp = 1000;
 	
 	// The desired global temperature.
-	private final double desiredTemp = 50;
+	private final double desiredTemp = 400; //50
 	
 	// The desired length of the edges.
 	private final double desiredEdgeLength = 256;
@@ -143,7 +143,6 @@ public class GraphEmbedderLayout extends Layout {
      */
 	private void init() {
 		
-		System.out.println("-------------------------------------");
 		System.out.println("Initializing algorithm...");
 		
 		// Place all the nodes in random positions and add them to nodeList.
@@ -210,6 +209,9 @@ public class GraphEmbedderLayout extends Layout {
 	 */
 	public void run(double frac) {
 		
+		System.out.println("-------------------------------------");
+		System.out.println("Algorithm started.");
+		
 		long startTime = System.nanoTime();
 		
 		if(!initialized) {
@@ -256,6 +258,8 @@ public class GraphEmbedderLayout extends Layout {
 		for(Vertex v : nodeList) {
 			v.item.setFixed(true);
 		}
+		
+		System.out.println("Algorithm finished.");
 	}
 	
     /**

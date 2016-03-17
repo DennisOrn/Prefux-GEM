@@ -10,6 +10,7 @@ import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.input.TouchEvent;
 import javafx.scene.input.TouchPoint;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -31,10 +32,10 @@ import prefux.visual.VisualItem;
 
 public class GemControl extends ControlAdapter {
 	
-	private static Paint NORMAL_COLOR				= Color.DEEPSKYBLUE;
-	private static Paint COLLAPSED_COLOR			= Color.ORANGE;
-	private static double NORMAL_STROKE_WIDTH		= 3;
-	private static double SELECTED_STROKE_WIDTH		= 15; 
+	public static Paint NORMAL_COLOR				= Color.DEEPSKYBLUE;
+	public static Paint COLLAPSED_COLOR				= Color.ORANGE;
+	public static double NORMAL_STROKE_WIDTH		= 3;
+	public static double SELECTED_STROKE_WIDTH		= 15; 
     
 	// Used to calculate how long a node has been pressed
     private long startTime = 0;
@@ -114,7 +115,7 @@ public class GemControl extends ControlAdapter {
 						hideChildren(node);
 						
 						// Hide the "outgoing" edges.
-						List<javafx.scene.Node> lines = getLines(node);
+						List<javafx.scene.Node> lines = getOutLines(node);
 						for(javafx.scene.Node line : lines) {
 							line.setVisible(false);
 						}
@@ -136,7 +137,7 @@ public class GemControl extends ControlAdapter {
 			    		showChildren(node);
 			    		
 			    		// Show the "outgoing" edges.
-			    		List<javafx.scene.Node> lines = getLines(node);
+			    		List<javafx.scene.Node> lines = getOutLines(node);
 						for(javafx.scene.Node line : lines) {
 							line.setVisible(true);
 						}
@@ -203,7 +204,7 @@ public class GemControl extends ControlAdapter {
 			}
 			
 			// Hide the lines.
-			List<javafx.scene.Node> lines = getLines(child);
+			List<javafx.scene.Node> lines = getOutLines(child);
 			for(javafx.scene.Node line : lines) {
 				line.setVisible(false);
 			}
@@ -234,7 +235,7 @@ public class GemControl extends ControlAdapter {
 			}
 			
 			// Show the lines
-			List<javafx.scene.Node> lines = getLines(child);
+			List<javafx.scene.Node> lines = getOutLines(child);
 			for(javafx.scene.Node line : lines) {
 				line.setVisible(true);
 			}
@@ -251,7 +252,7 @@ public class GemControl extends ControlAdapter {
      * Returns the circle that is associated with the node
      * that is passed to the method.
      */
-    private Circle getCircle(Node node) {
+    public static Circle getCircle(Node node) {
     	
     	VisualItem item = (VisualItem) node;
     	if(item.getNode() instanceof Group) {
@@ -273,7 +274,7 @@ public class GemControl extends ControlAdapter {
      * Returns the label that is associated with the node
      * that is passed to the method.
      */
-    private Label getLabel(Node node) {
+    public static Label getLabel(Node node) {
     	
 	    VisualItem item = (VisualItem) node;
 		if(item.getNode() instanceof Group) {
@@ -303,7 +304,7 @@ public class GemControl extends ControlAdapter {
      * Returns a list with all the "outgoing" lines that are
      * connected to the node that is passed to the method.
      */
-    private List<javafx.scene.Node> getLines(Node node) {
+    public static List<javafx.scene.Node> getOutLines(Node node) {
     	
     	List<javafx.scene.Node> lines = new ArrayList<>();
     	Iterator<? extends Edge> it = node.outEdges();
