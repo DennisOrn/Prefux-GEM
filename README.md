@@ -22,3 +22,5 @@ Files:
 - *GemMain2.java* (Prefux-master/src/test/java/fx/)
 - *GemControl2.java* (Prefux-master/src/main/java/prefux/controls/)
 - *ArrowRenderer.java* (Prefux-master/src/main/java/prefux/render/)
+
+**_Remember to specify which ontology-file to read in GemMain.java / GemMain2.java_**
