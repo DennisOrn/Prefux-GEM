@@ -46,7 +46,13 @@ public class GemMain2 extends Application {
 	public static void main(String[] args) {
 		launch(args);
 	}
-
+	
+	private static final javafx.scene.paint.Color FILL_COLOR	= javafx.scene.paint.Color.DEEPSKYBLUE;
+	private static final javafx.scene.paint.Color STROKE_COLOR	= javafx.scene.paint.Color.BLACK;
+	private static final int STROKE_WIDTH						= 3;
+	private static final String LABEL_FONT						= "Verdana";
+	private static final FontPosture LABEL_FONT_POSTURE			= FontPosture.ITALIC;
+	
 	private static final double WIDTH = 1280;
 	private static final double HEIGHT = 720;
 	private static final String GROUP = "graph";
@@ -316,7 +322,7 @@ public class GemMain2 extends Application {
 					if(node.getDegree() >= degree) {
 						entry.getValue().setManaged(true);
 						entry.getValue().setVisible(true);
-						entry.getValue().setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
+						entry.getValue().setFont(Font.font(LABEL_FONT, LABEL_FONT_POSTURE, labelSizeAdjusted));
 					} else {
 						entry.getValue().setManaged(false);
 						entry.getValue().setVisible(false);
@@ -406,9 +412,9 @@ public class GemMain2 extends Application {
 				if(groupChild instanceof Circle) {
 					
 					Circle circle = (Circle) groupChild;
-					circle.setFill(javafx.scene.paint.Color.DEEPSKYBLUE);
-					circle.setStroke(javafx.scene.paint.Color.BLACK);
-					circle.setStrokeWidth(3);
+					circle.setFill(FILL_COLOR);
+					circle.setStroke(STROKE_COLOR);
+					circle.setStrokeWidth(STROKE_WIDTH);
 					
 				} 
 				
@@ -423,7 +429,7 @@ public class GemMain2 extends Application {
 						if(stackChild instanceof Label) {
 							
 							Label label = (Label) stackChild;
-							label.setFont(Font.font("Verdana", FontPosture.ITALIC, labelSizeAdjusted));
+							label.setFont(Font.font(LABEL_FONT, LABEL_FONT_POSTURE, labelSizeAdjusted));
 							
 							// Set the labels visibility based on its degree.
 							if(((prefux.data.Node) item).getDegree() < 10) {
