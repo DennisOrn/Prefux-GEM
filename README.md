@@ -15,7 +15,7 @@ Files:
 ##Version 2 (Levels)
 
 A specific number of levels are expanded at first, the user can then expand more nodes by clicking on the nodes that are collapsed.
-Run time is improved, but the resulting graph typically has more edge crossings.
+Run time is improved, but the resulting graph typically has more edge crossings. The number of levels is specified in the variable "level" in *GemMain2.java*.
 
 Files:
 - *GraphEmbedderLayout2.java* (Prefux-master/src/main/java/prefux/action/layout/graph/)
