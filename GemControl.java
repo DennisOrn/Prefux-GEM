@@ -224,17 +224,17 @@ public class GemControl extends ControlAdapter {
 			
 			Node child = it.next();
 			
-			// Recursive method-call
+			// Recursive method-call.
 			showChildren(child);
 			
-			// Show the circle
+			// Show the circle.
 			Circle circle = getCircle(child);
 			if(circle != null) {
 				circle.setVisible(true);
 				circle.setFill(NORMAL_COLOR);
 			}
 			
-			// Show the lines
+			// Show the lines.
 			List<javafx.scene.Node> lines = getOutLines(child);
 			for(javafx.scene.Node line : lines) {
 				line.setVisible(true);

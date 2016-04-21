@@ -150,7 +150,7 @@ public class GemControl2 extends ControlAdapter {
 			    		
 						item.setExpanded(true);
 						
-						// Run the algorithm again
+						// Run the algorithm again.
 						Action action = item.getVisualization().getAction("layout");
 						action.run();
 					}
@@ -228,17 +228,17 @@ public class GemControl2 extends ControlAdapter {
 			
 			Node child = it.next();
 			
-			// Recursive method-call
+			// Recursive method-call.
 			showChildren(child);
 			
-			// Show the circle
+			// Show the circle.
 			Circle circle = getCircle(child);
 			if(circle != null) {
 				circle.setVisible(true);
 				circle.setFill(NORMAL_COLOR);
 			}
 			
-			// Show the lines
+			// Show the lines.
 			List<javafx.scene.Node> lines = getOutLines(child);
 			for(javafx.scene.Node line : lines) {
 				line.setVisible(true);
