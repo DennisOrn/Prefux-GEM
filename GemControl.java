@@ -37,7 +37,7 @@ public class GemControl extends ControlAdapter {
 	public static double NORMAL_STROKE_WIDTH		= 3;
 	public static double SELECTED_STROKE_WIDTH		= 15; 
     
-	// Used to calculate how long a node has been pressed
+	// Used to calculate how long a node has been pressed.
     private long startTime = 0;
     
     // The item that is currently touched.
@@ -59,7 +59,7 @@ public class GemControl extends ControlAdapter {
 			// If an item is being pressed.
 			if(e.getEventType() == TouchEvent.TOUCH_PRESSED && item instanceof NodeItem) {
 				startTime = System.nanoTime();
-				selected = item.isHighlighted() ? true : false;
+				selected = item.isHighlighted();
 			}
 			
 			// If an item is pressed and held.
