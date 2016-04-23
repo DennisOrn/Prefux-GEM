@@ -62,7 +62,7 @@ public class ArrowRenderer extends AbstractShapeRenderer implements Renderer {
 		return false;
 	}
 	
-	private void adjustArrowRotation(EdgeItem edge, Polygon polygon) {
+	private static void adjustArrowRotation(EdgeItem edge, Polygon polygon) {
 		
 		double startX = edge.getSourceItem().xProperty().get();
 		double startY = edge.getSourceItem().yProperty().get();
