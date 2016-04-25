@@ -70,6 +70,11 @@ public class GraphEmbedderLayout2 extends Layout {
 	// WARNING: do not set this to zero!
 	private final int updateFrequency = 9999;
 	
+	// The method used to calculate the distance between nodes.
+	// If set to true: Euclidean distance is used.
+	// If set to false: Manhattan distance is used.
+	private final boolean euclideanDistance = false;
+	
 	// The global temperature.
 	private double globalTemp = 9999;
 	
@@ -378,10 +383,16 @@ public class GraphEmbedderLayout2 extends Layout {
 			delta[0] = v.coordinates[0] - u.coordinates[0];
 			delta[1] = v.coordinates[1] - u.coordinates[1];
 			
-			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+			double distance;
 			
-			if(length != 0) {
-				double scale = desSquared / (length * length);
+			if(euclideanDistance) {
+				distance = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+			} else {
+				distance = Math.abs(delta[0]) + Math.abs(delta[1]);
+			}
+			
+			if(distance != 0) {
+				double scale = desSquared / (distance * distance);
 				impulse[0] = impulse[0] + delta[0] * scale;
 				impulse[1] = impulse[1] + delta[1] * scale;
 			}
@@ -402,8 +413,15 @@ public class GraphEmbedderLayout2 extends Layout {
 			delta[0] = v.coordinates[0] - u.coordinates[0];
 			delta[1] = v.coordinates[1] - u.coordinates[1];
 			
-			double length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
-			double scale = (length * length) / desSquaredScaled;
+			double distance;
+			
+			if(euclideanDistance) {
+				distance = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+			} else {
+				distance = Math.abs(delta[0]) + Math.abs(delta[1]);
+			}
+			
+			double scale = (distance * distance) / desSquaredScaled;
 			
 			impulse[0] = impulse[0] - delta[0] * scale;
 			impulse[1] = impulse[1] - delta[1] * scale;
