@@ -87,7 +87,7 @@ public class GraphEmbedderLayout2 extends Layout {
 	private final double maxTemp = 1000;
 	
 	// The desired global temperature.
-	private final double desiredTemp = 50;
+	private final double desiredTemp = 40;
 	
 	// The desired length of the edges.
 	private final double desiredEdgeLength = 512;
@@ -166,9 +166,6 @@ public class GraphEmbedderLayout2 extends Layout {
 			item.setY(newY);
 			
 			item.setFixed(false);
-			
-			sumPos[0] += newX;
-			sumPos[1] += newY;
 			
 			Vertex v = new Vertex(item);
 			v.coordinates[0] = item.getX();

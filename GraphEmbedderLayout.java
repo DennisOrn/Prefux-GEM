@@ -83,7 +83,7 @@ public class GraphEmbedderLayout extends Layout {
 	private final double maxTemp = 1000;
 	
 	// The desired global temperature.
-	private final double desiredTemp = 50;
+	private final double desiredTemp = 40;
 	
 	// The desired length of the edges.
 	private final double desiredEdgeLength = 256;
