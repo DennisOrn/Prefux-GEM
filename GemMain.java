@@ -93,6 +93,8 @@ public class GemMain extends Application {
 		// Zoom out to fit the whole initial graph on the screen.
 		root.setScaleX(0.05);
         root.setScaleY(0.05);
+		//root.setScaleX(0.02);
+        //root.setScaleY(0.02);
         
         labelSizeAdjusted = labelSize / root.getScaleX();
 		
