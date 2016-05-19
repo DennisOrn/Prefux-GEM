@@ -73,7 +73,7 @@ public class GraphEmbedderLayout2 extends Layout {
 	// The method used to calculate the distance between nodes.
 	// If set to true: Euclidean distance is used.
 	// If set to false: Manhattan distance is used.
-	private final boolean euclideanDistance = false;
+	private final boolean euclideanDistance = true;
 	
 	// The global temperature.
 	private double globalTemp = 9999;
@@ -90,13 +90,13 @@ public class GraphEmbedderLayout2 extends Layout {
 	private final double desiredTemp = 40;
 	
 	// The desired length of the edges.
-	private final double desiredEdgeLength = 512;
+	private final double desiredEdgeLength = 256;
 	
 	// The gravitational constant.
-	private final double gravitationalConstant = (double) 1 / 32;
+	private final double gravitationalConstant = (double) 1 / 64;
 	
 	// The opening angles for oscillation- and rotation-detection.
-	private final double oscillationOpeningAngle = Math.PI / 4;
+	private final double oscillationOpeningAngle = Math.PI / 6;
 	private final double rotationOpeningAngle = Math.PI / 3;
 	
 	// The sensitivity for correcting oscillations and rotations.

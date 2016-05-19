@@ -77,7 +77,7 @@ public class GemMain2 extends Application {
 	private double labelSizeAdjusted;
 	
 	// The number of levels that are shown initially
-	private int level = 7;
+	private int level = 5;
 	
 	// Variables used for the touch-functionality, zooming and rotating.
 	private double startScale, startRotate;
