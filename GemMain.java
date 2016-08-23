@@ -38,11 +38,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.hp.hpl.jena.ontology.OntClass;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.util.iterator.Filter;
+import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.util.iterator.Filter;
 
 public class GemMain extends Application {
 	public static void main(String[] args) {
@@ -110,7 +110,10 @@ public class GemMain extends Application {
 			
 			// Read a specified ontology-file.
 			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			
+			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_snomed.owl");
+			
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			// Create an iterator for iterating over the ontology.
@@ -340,7 +343,7 @@ public class GemMain extends Application {
 			
 			/***************** END OF TOUCH-FUNCTIONALITY ****************/
 		}
-		catch(com.hp.hpl.jena.shared.WrappedIOException e) {
+		catch(org.apache.jena.shared.WrappedIOException e) {
 			if(e.getCause() instanceof java.io.FileNotFoundException) {
 				System.err.println("A java.io.FileNotFoundException caught: " + e.getCause().getMessage());
 			}

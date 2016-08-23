@@ -36,11 +36,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.hp.hpl.jena.ontology.OntClass;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.util.iterator.Filter;
+import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.util.iterator.Filter;
 
 public class GemMain2 extends Application {
 	public static void main(String[] args) {
@@ -360,7 +360,7 @@ public class GemMain2 extends Application {
 			
 			/***************** END OF TOUCH-FUNCTIONALITY ****************/
 		}
-		catch(com.hp.hpl.jena.shared.WrappedIOException e) {
+		catch(org.apache.jena.shared.WrappedIOException e) {
 			if(e.getCause() instanceof java.io.FileNotFoundException) {
 				System.err.println("A java.io.FileNotFoundException caught: " + e.getCause().getMessage());
 			}
