@@ -88,7 +88,9 @@ public class GemMain2 extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		
-		primaryStage.setTitle("GEM");
+		System.out.println("JavaFX version: " + com.sun.javafx.runtime.VersionInfo.getRuntimeVersion());
+		
+		primaryStage.setTitle("GEM-2");
 		Pane root = new Pane();
 		
 		// Zoom out to fit the whole initial graph on the screen.
@@ -112,7 +114,13 @@ public class GemMain2 extends Application {
 			
 			// Read a specified ontology-file.
 			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
-			m.read("file:///Users/dennisornberg/Desktop/datasets2/oaei2014_FMA_small_overlapping_nci.owl");
+			
+			m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_nci.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_fma.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_snomed.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_SNOMED_small_overlapping_fma.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_snomed.owl");
+			
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
 			// Create an iterator for iterating over the ontology.
@@ -151,7 +159,8 @@ public class GemMain2 extends Application {
 				}
 			}
 			
-			System.out.println("Total number of nodes: " + ontList.size());
+			System.out.println("Total number of nodes: " + nodeTable.getRowCount());
+			System.out.println("Total number of edges: " + edgeTable.getRowCount());
 			
 			// Create a new graph using the two tables.
 			graph = new Graph(nodeTable, edgeTable, true);
