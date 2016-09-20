@@ -80,20 +80,20 @@ public class GraphEmbedderLayout extends Layout {
 	private double[] sumPos = new double[2];
 	
 	// The maximal temperature a node is allowed to have.
-	private final double maxTemp = 1000;
+	private final double maxTemp = 256;
 	
 	// The desired global temperature.
-	private final double desiredTemp = 40;
+	private final double desiredTemp = 3;
 	
 	// The desired length of the edges.
-	private final double desiredEdgeLength = 256;
+	private final double desiredEdgeLength = 128;
 	
 	// The gravitational constant.
-	private final double gravitationalConstant = (double) 1 / 64;
+	private final double gravitationalConstant = (double) 1 / 32;
 	
 	// The opening angles for oscillation- and rotation-detection.
-	private final double oscillationOpeningAngle = Math.PI / 6;
-	private final double rotationOpeningAngle = Math.PI / 3;
+	private final double oscillationOpeningAngle = Math.PI / 2;
+	private final double rotationOpeningAngle = Math.PI;
 	
 	// The sensitivity for correcting oscillations and rotations.
 	private final double oscillationSensitivity = 1.1;
@@ -108,7 +108,7 @@ public class GraphEmbedderLayout extends Layout {
 		private double[] impulse = new double[2];
 		
 		// The temperature.
-		private double temp = 1000;
+		private double temp = 256;
 		
 		// The skew.
 		private double skew = 0;
@@ -255,7 +255,8 @@ public class GraphEmbedderLayout extends Layout {
 					v.item.setY(v.coordinates[1]);
 				}
 			}
-		} while(globalTemp > desiredTemp && nrRounds < maxRounds);
+			
+		} while(globalTemp >= desiredTemp && nrRounds < maxRounds);
 		
 		// When the algorithm has finished, set fixed to true to enable
 		// the touch-functionality in prefux.controls.GemControl.

@@ -93,10 +93,14 @@ public class GemMain extends Application {
 		Pane root = new Pane();
 		
 		// Zoom out to fit the whole initial graph on the screen.
-		root.setScaleX(0.05);
-        root.setScaleY(0.05);
-		//root.setScaleX(0.02);
-        //root.setScaleY(0.02);
+		//root.setScaleX(0.05);
+        //root.setScaleY(0.05);
+		//root.setScaleX(0.04);
+        //root.setScaleY(0.04);
+		//root.setScaleX(0.03);
+        //root.setScaleY(0.03);
+		root.setScaleX(0.02);
+        root.setScaleY(0.02);
         
         labelSizeAdjusted = labelSize / root.getScaleX();
 		
@@ -113,8 +117,8 @@ public class GemMain extends Application {
 			// Read a specified ontology-file.
 			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
 			
-			m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_fma.owl");
+			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_fma.owl");
 			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_snomed.owl");
 			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_SNOMED_small_overlapping_fma.owl");
 			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_snomed.owl");
@@ -156,6 +160,9 @@ public class GemMain extends Application {
 					edgeTable.set(index, 1, ontList.indexOf(sub));
 				}
 			}
+			
+			// Remove ontList to save up some RAM.
+			ontList = null;
 			
 			System.out.println("Total number of nodes: " + nodeTable.getRowCount());
 			System.out.println("Total number of edges: " + edgeTable.getRowCount());
@@ -225,7 +232,7 @@ public class GemMain extends Application {
 			 */
 			
 			/* MOUSE */
-			/*class Delta { double x, y; }
+			class Delta { double x, y; }
 			final Delta dragDelta = new Delta();
 			
 			root.setOnMouseMoved(event -> {
@@ -238,7 +245,7 @@ public class GemMain extends Application {
 				display.setLayoutX(event.getX() + dragDelta.x);
 				display.setLayoutY(event.getY() + dragDelta.y);
 				event.consume();
-			});*/
+			});
 			/* END OF MOUSE */
 			
 			root.setOnTouchPressed(event -> {

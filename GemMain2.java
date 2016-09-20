@@ -159,6 +159,9 @@ public class GemMain2 extends Application {
 				}
 			}
 			
+			// Remove ontList to save up some RAM.
+			ontList = null;
+			
 			System.out.println("Total number of nodes: " + nodeTable.getRowCount());
 			System.out.println("Total number of edges: " + edgeTable.getRowCount());
 			
