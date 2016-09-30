@@ -1,6 +1,6 @@
 # Prefux-GEM
 
-This repository contains two versions of GEM. A touch screen is required to use all the functionality. Jena should be added to the project in Eclipse, the version of Jena that has been tested is 3.1.0.
+This repository contains two versions of GEM. A touch screen is required to use all the functionality. Jena should be added to the project in Eclipse, the version of Jena that has been tested is 3.1.0. The file JenaExample.java is not needed, it is just an example.
 
 ##Version 1 (Normal)
 
