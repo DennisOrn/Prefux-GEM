@@ -115,11 +115,11 @@ public class GemMain2 extends Application {
 			// Read a specified ontology-file.
 			//m.read("file:///C:\\Users\\valiv\\Desktop\\EclipseMarsWorkspace\\Prefux-master\\oaei2014_FMA_small_overlapping_nci.owl");
 			
-			m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_nci.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_fma.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_FMA_small_overlapping_snomed.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_SNOMED_small_overlapping_fma.owl");
-			//m.read("file:///Users/dennisornberg/Desktop/oaei2014_NCI_small_overlapping_snomed.owl");
+			//m.read("file:///Users/dennis/Desktop/oaei2014_FMA_small_overlapping_nci.owl");
+			m.read("file:///Users/dennis/Desktop/oaei2014_NCI_small_overlapping_fma.owl");
+			//m.read("file:///Users/dennis/Desktop/oaei2014_FMA_small_overlapping_snomed.owl");
+			//m.read("file:///Users/dennis/Desktop/oaei2014_SNOMED_small_overlapping_fma.owl");
+			//m.read("file:///Users/dennis/Desktop/oaei2014_NCI_small_overlapping_snomed.owl");
 			
 			//m.read("file:///C:\\Users\\mazze\\Desktop\\datasets2\\oaei2014_FMA_small_overlapping_nci.owl");
 			
